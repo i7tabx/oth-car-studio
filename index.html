@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>OTH Car Studio</title>
+<meta name="description" content="سيارات ومعدات أوف رود حقيقية للعبة Over the Hill: ملف واحد، ضغطة وحدة، وتأثير فيزيائي محسوب.">
+<link rel="icon" href="favicon.png">
+<meta property="og:title" content="OTH Car Studio">
+<meta property="og:description" content="سيارات ومعدات أوف رود حقيقية للعبة Over the Hill">
+<meta property="og:image" content="icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* layout: a curved 3D shelf of off-road gear opens the page; below it a real-photo configurator, then plain reading sections */
+:root{
+  --night:#0f0c0b; --panel:#18130f; --panel2:#201914; --line:#2c231d; --line2:#3a2f27;
+  --text:#f6eee6; --muted:#a8978a; --dim:#75665c; --sand:#ffe2b0;
+  --ember:#ff6a1f; --ember2:#ff8a2a; --ok:#3ecf8e; --info:#6fb4ff; --bad:#ff8a6a;
+  --sheet:#efe6d6; --ink:#17120f; --ink2:#5b4f45; --rust:#c2410c;
+  --sunset:linear-gradient(135deg,#ffb054 0%,#ff7a22 45%,#e8410f 100%);
+  --glow:0 14px 40px -14px rgba(255,106,31,.7);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --sans:"Readex Pro","Segoe UI",Tahoma,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--night);color:var(--text);font:400 16px/1.7 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+img{max-width:100%;display:block}
+button{font:inherit;color:inherit}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.ltr{direction:ltr;unicode-bidi:isolate}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.btn{display:inline-flex;align-items:center;gap:10px;border-radius:14px;padding:13px 24px;font:600 15.5px/1 var(--sans);text-decoration:none;border:1px solid var(--line2);background:#211913;color:var(--text);cursor:pointer;transition:.2s}
+.btn:hover{border-color:#5a4434;background:#2a2019}
+.btn:focus-visible,.chipb:focus-visible,.sw:focus-visible,.arrow:focus-visible{outline:2px solid var(--ember2);outline-offset:3px}
+.btn.primary{background:var(--sunset);border-color:transparent;color:#1c0b03;box-shadow:var(--glow)}
+.btn.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn.small{padding:9px 16px;font-size:14px;border-radius:11px}
+.btn[aria-disabled=true]{opacity:.55;cursor:default}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;background:#2a211b;color:var(--muted);white-space:nowrap}
+.badge.warn{background:rgba(245,184,61,.12);color:#f5b83d}.badge.info{background:rgba(111,180,255,.12);color:var(--info)}.badge.ok{background:rgba(62,207,142,.12);color:var(--ok)}
+.eyebrow{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.3px;color:var(--ember2);margin-bottom:10px}
+h2{font-size:clamp(26px,3.4vw,40px);line-height:1.25;margin:0 0 12px;letter-spacing:-.3px;text-wrap:balance}
+.lead{color:var(--muted);font-size:17px;max-width:640px;margin:0}
+section{padding-block:96px;position:relative}
+.sec-head{margin-bottom:38px}
+
+/* ---------- top bar */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--night)}
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(15,12,11,.72);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,226,176,.06)}
+.nav .wrap{display:flex;align-items:center;gap:22px;height:64px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+.brand img{width:36px;height:36px;border-radius:10px;box-shadow:0 8px 20px -8px rgba(255,106,31,.8)}
+.wm{direction:ltr;line-height:1}
+.wm b{display:block;font-size:18px;letter-spacing:1.4px;background:var(--sunset);-webkit-background-clip:text;background-clip:text;color:transparent}
+.wm span{display:block;font-size:9px;letter-spacing:3px;color:#cdb9a8;margin-top:4px}
+.links{display:flex;gap:4px;margin-inline-start:auto}
+.links a{text-decoration:none;color:var(--muted);font-size:14.5px;padding:8px 12px;border-radius:10px}
+.links a:hover{color:var(--text);background:#1d1713}
+@media (max-width:860px){.links{display:none}.nav .btn{margin-inline-start:auto}}
+
+/* ---------- the shelf (hero) */
+.shelf-sec{padding:0;height:clamp(620px,calc(100svh - 64px),900px);overflow:hidden;user-select:none;-webkit-user-select:none;
+  background:radial-gradient(900px 520px at 50% 38%,rgba(255,106,31,.13),transparent 65%),url("topo.svg") center/cover no-repeat,var(--night);
+  --H:300px;--ws:50px;--d:210px;--cy:43%}
+.shelf-sec.fine{cursor:none}
+.kicker{position:absolute;top:22px;inset-inline:0;text-align:center;z-index:12;pointer-events:none}
+.kicker b{display:block;font-size:clamp(22px,2.6vw,32px);font-weight:700;letter-spacing:-.3px}
+.kicker b em{font-style:normal;background:var(--sunset);-webkit-background-clip:text;background-clip:text;color:transparent}
+.kicker span{color:var(--muted);font-size:14px}
+.halftone{position:absolute;z-index:1;font:700 min(19vh,10.5vw)/1 var(--sans);letter-spacing:.02em;direction:ltr;color:transparent;pointer-events:none;white-space:nowrap;
+  background:radial-gradient(circle at 50% 50%,rgba(255,150,70,.5) 0 34%,transparent 40%) 0 0/4px 4px,rgba(255,138,42,.07);-webkit-background-clip:text;background-clip:text}
+.halftone.a{right:2.6vw;top:17%}
+.halftone.b{left:2.6vw;top:44%}
+.floor{position:absolute;left:50%;top:calc(var(--cy) + var(--H)*.47);width:min(96vw,calc(var(--H)*3.6));height:calc(var(--H)*.26);transform:translateX(-50%);z-index:2;pointer-events:none;
+  background:radial-gradient(50% 50% at 50% 40%,rgba(0,0,0,.62),rgba(0,0,0,.24) 55%,transparent 72%)}
+.shelf{position:absolute;inset-inline:0;top:calc(var(--cy) - var(--H)/2 - 50px);height:calc(var(--H) + 100px);perspective:1400px;perspective-origin:50% 50%;z-index:10;touch-action:pan-y}
+.stage{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+.tape{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;will-change:transform}
+.face{position:absolute;top:calc(var(--H)/-2);height:var(--H);backface-visibility:hidden;border-radius:3px;overflow:hidden;background:#1a1410}
+.face::after{content:"";position:absolute;inset:0;background:#000;opacity:var(--shade,0);pointer-events:none}
+.sp{width:var(--ws);left:calc(var(--ws)/-2);transform:translateZ(calc(var(--d)/2));border:1px solid rgba(255,226,176,.08);
+  background:linear-gradient(180deg,#2a1d14,#15100d)}
+.sp .sp-img{position:absolute;inset:0 0 auto 0;height:26%;background-size:cover;background-position:50% 40%;filter:saturate(1.05)}
+.sp .sp-img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,#1c140f)}
+.sp .sp-name{position:absolute;left:50%;top:60%;transform:translate(-50%,-50%) rotate(-90deg);white-space:nowrap;font-weight:700;font-size:calc(var(--ws)*.36);color:#f1e3d3;letter-spacing:.18em}
+.sp .sp-kg{position:absolute;bottom:calc(var(--H)*.03);left:50%;transform:translateX(-50%);font-size:calc(var(--ws)*.2);font-weight:600;color:var(--ember2);border:1px solid rgba(255,138,42,.5);border-radius:3px;padding:1px 4px;white-space:nowrap;direction:ltr}
+.sp .sp-band{position:absolute;inset:26% 0 auto 0;height:3px;background:var(--sunset)}
+.cv{width:var(--d);left:calc(var(--d)/-2);transform:rotateY(90deg) translateZ(calc(var(--ws)/2));box-shadow:0 34px 60px -30px rgba(0,0,0,.9);cursor:pointer;background-size:cover;background-position:center}
+.cv .cv-top{position:absolute;top:0;inset-inline:0;padding:6% 6% 12%;background:linear-gradient(180deg,rgba(10,8,7,.75),transparent);display:flex;justify-content:space-between;align-items:center;font-size:calc(var(--d)*.032);font-weight:600;letter-spacing:.14em;color:#f6e7d6;direction:ltr}
+.cv .cv-top i{font-style:normal;border:1px solid rgba(255,226,176,.6);padding:2px 6px;border-radius:2px}
+.cv .cv-bot{position:absolute;bottom:0;inset-inline:0;padding:0 8% 8%;background:linear-gradient(180deg,transparent,rgba(10,8,7,.92) 55%);padding-top:30%}
+.cv .cv-bot b{display:block;font-size:calc(var(--d)*.075);line-height:1.2;font-weight:700}
+.cv .cv-bot span{display:block;font-size:calc(var(--d)*.036);color:var(--ember2);font-weight:600;margin-top:2%}
+.ring{position:absolute;z-index:14;width:42px;height:42px;border-radius:50%;border:1px solid var(--ember);background:rgba(15,12,11,.82);display:grid;place-items:center;padding:0;cursor:pointer;transform:scale(0);color:var(--ember2)}
+.shelf.hot{cursor:pointer}
+.ring svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.caption{position:absolute;inset-inline:0;top:calc(var(--cy) + var(--H)/2 + 4.2vh);display:grid;justify-items:center;gap:9px;z-index:12;pointer-events:none}
+.mask{position:relative;overflow:hidden;width:min(80vw,640px);text-align:center}
+.mask>span{display:block}
+.mask>span+span{position:absolute;inset:0}
+.cap-title{font-weight:700;font-size:clamp(26px,3.3vw,44px);line-height:1.25;letter-spacing:-.01em;height:1.3em}
+.cap-title>span{background:var(--sunset);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cap-sub{font-size:10.5px;font-weight:600;letter-spacing:.22em;color:var(--ember2);text-transform:uppercase;height:1.5em;direction:ltr}
+.cap-rule{width:18px;height:1px;background:var(--ember)}
+.cap-meta{font-size:13px;font-weight:500;color:#e2d3c4;height:1.7em;direction:ltr}
+.cap-title{direction:ltr}
+.arrow{position:absolute;z-index:13;top:calc(var(--cy) + var(--H)/2 + 4.2vh + 6px);width:44px;height:44px;display:grid;place-items:center;background:none;border:0;color:var(--ember2);cursor:pointer;border-radius:50%}
+.arrow:hover{background:rgba(255,106,31,.1)}
+.arrow svg{width:24px;height:12px;fill:none;stroke:currentColor;stroke-width:1.3}
+.arrow.l{left:calc(50% - min(26vw,330px))}.arrow.r{left:calc(50% + min(26vw,330px) - 44px)}
+.ruler{position:absolute;left:36px;right:36px;bottom:26px;height:40px;z-index:12;direction:ltr;cursor:pointer}
+.ruler .line{position:absolute;left:0;right:0;top:12px;height:1px;background:var(--ember);opacity:.7}
+.ruler i{position:absolute;top:12px;width:1px;background:var(--ember);opacity:.4;height:7px}
+.ruler i.maj{height:13px;opacity:.75}
+.ruler em{position:absolute;top:28px;transform:translateX(-50%);font-style:normal;font-size:9.5px;font-weight:500;color:var(--ember2);white-space:nowrap}
+.ruler em:first-of-type{transform:none}.ruler em:last-of-type{transform:translateX(-100%)}
+.ruler .dot{position:absolute;top:8px;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 4px rgba(255,106,31,.18),0 0 18px rgba(255,106,31,.9)}
+.ruler .unit{position:absolute;right:0;top:-12px;font-size:10px;color:var(--muted);letter-spacing:.1em}
+.cursor{position:fixed;left:0;top:0;width:58px;height:58px;margin:-29px 0 0 -29px;z-index:100;pointer-events:none;display:none}
+.cursor.on{display:block}
+.cursor .cr{position:absolute;inset:0;border:1.5px solid var(--sand);border-radius:50%;transform:scale(.4);transition:transform .5s var(--ease),background .4s,border-color .4s}
+.cursor .cd{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--sand);transition:opacity .4s}
+.cursor .cl{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700;color:#1c0b03;transform:scale(0);transition:transform .45s var(--ease)}
+.cursor.open .cr{transform:scale(1.5);background:var(--ember);border-color:var(--ember)}.cursor.open .cl{transform:scale(1)}.cursor.open .cd{opacity:0}
+.cursor.spine .cr{transform:scale(.72)}
+.cursor.btnc .cr{transform:scale(.55)}.cursor.btnc .cd{opacity:0}
+.grain{position:absolute;inset:0;z-index:15;pointer-events:none;opacity:.5;mix-blend-mode:soft-light;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .8 0 0 0 0 .7 0 0 0 .32 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+@media (max-width:767px){
+  .shelf-sec{--cy:42%}
+  .kicker span{display:none}
+  .halftone{font-size:22vw;opacity:.8}
+  .arrow{top:auto;bottom:74px}.arrow.l{left:10px}.arrow.r{left:auto;right:10px}
+  .ruler{left:16px;right:16px;bottom:18px}
+  .ruler em:nth-of-type(even){display:none}
+}
+
+/* ---------- detail sheet (grows out of the open cover) */
+.detail{position:fixed;inset:0;z-index:60;background:var(--sheet);color:var(--ink);display:none;overflow:auto}
+.detail.on{display:block}
+.detail-in{min-height:100%;display:grid;grid-template-columns:1fr 1.25fr;gap:4vw;padding:96px 6vw 48px 7vw;align-items:center}
+.d-close{position:fixed;top:calc(22px + env(safe-area-inset-top,0px));left:max(28px,env(safe-area-inset-left,0px));z-index:2;border:1px solid var(--ink);background:none;color:var(--ink);font:600 12px/1 var(--sans);letter-spacing:.08em;padding:9px 14px;cursor:pointer;border-radius:2px}
+.d-close:hover{background:var(--ink);color:var(--sheet)}
+.d-brand{position:fixed;top:calc(30px + env(safe-area-inset-top,0px));right:max(28px,env(safe-area-inset-right,0px));font:600 11px/1 var(--sans);letter-spacing:.2em;color:var(--rust);direction:ltr}
+.d-col{display:grid;gap:16px;max-width:540px;justify-self:start}
+.dm{overflow:hidden}
+.dm>*{display:block}
+.d-sub{font-size:11.5px;font-weight:600;letter-spacing:.2em;color:var(--rust)}
+.detail .d-col{direction:ltr;text-align:left}
+.d-title{font-size:clamp(38px,5vw,72px);line-height:1.15;font-weight:700;letter-spacing:-.02em;color:var(--rust);margin:0}
+.d-meta{font-size:13.5px;color:var(--ink2);font-weight:500}
+.d-desc{font-size:17.5px;line-height:1.75;max-width:44ch;margin:0}
+.d-specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;padding:1px}
+.d-specs div{background:var(--sheet);padding:10px 12px;box-shadow:0 0 0 1px rgba(23,18,15,.25)}
+.d-specs span{display:block;font-size:11.5px;color:var(--ink2)}
+.d-specs b{font-size:17px}
+.d-basis{font-size:12.5px;color:var(--ink2);direction:ltr;text-align:right}
+.d-go{justify-self:start;border:1px solid var(--rust);background:none;color:var(--rust);font:600 14.5px/1 var(--sans);padding:14px 22px;cursor:pointer;border-radius:2px;transition:.2s}
+.d-go:hover{background:var(--rust);color:var(--sheet)}
+.d-acts{display:flex;gap:10px;flex-wrap:wrap}.d-dl{text-decoration:none;background:var(--rust);color:var(--sheet)}.d-dl:hover{filter:brightness(1.1)}.d-dl[hidden]{display:none}
+.d-poster{width:100%;max-height:78vh;justify-self:center;aspect-ratio:5/4;border-radius:2px}
+@media (max-width:820px){.detail-in{grid-template-columns:1fr;padding:84px 22px 40px}.d-poster{order:-1;height:auto}.d-title{font-size:38px}}
+
+/* ---------- configurator */
+.build{background:linear-gradient(180deg,var(--night),#120e0c 30%,var(--night))}
+.cfg{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;align-items:start}
+.viewer{position:sticky;top:84px;border-radius:26px;overflow:hidden;border:1px solid var(--line);background:radial-gradient(70% 60% at 50% 45%,#2a1c13,#0c0a09);transition:background .6s}
+.viewer.night{background:#05060a}
+.viewer canvas{display:block;width:100%;height:auto;aspect-ratio:16/10}
+.v-top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(18,14,12,.85);flex-wrap:wrap}
+.v-stage{position:relative}
+.daynight{display:flex;background:rgba(15,12,11,.7);border:1px solid var(--line2);border-radius:99px;padding:4px;backdrop-filter:blur(8px)}
+.daynight button{border:0;background:none;padding:8px 16px;border-radius:99px;font-weight:600;font-size:13.5px;color:var(--muted);cursor:pointer;transition:.25s}
+.daynight button.on{background:var(--sunset);color:#1c0b03}
+.viewer.night .daynight button.on{background:linear-gradient(135deg,#3454b4,#131a3a);color:#dfe8ff}
+.swatches{display:flex;gap:7px;background:rgba(15,12,11,.7);border:1px solid var(--line2);border-radius:99px;padding:6px 8px;backdrop-filter:blur(8px)}
+.sw{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.18);cursor:pointer;padding:0}
+.sw.on{border-color:#fff;box-shadow:0 0 0 2px var(--ember)}
+.v-load{position:absolute;inset:auto auto 14px 14px;font-size:12px;color:var(--muted);background:rgba(15,12,11,.7);padding:4px 10px;border-radius:99px;opacity:0;transition:opacity .3s}
+.v-load.on{opacity:1}
+.v-credit{position:absolute;inset:auto 14px 12px auto;font-size:11px;color:rgba(246,238,230,.5);direction:ltr}
+.reach{padding:14px 18px 16px;border-top:1px solid var(--line);background:rgba(18,14,12,.85)}
+.reach-h{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted);margin-bottom:8px}
+.reach-h b{font-size:20px;color:var(--text)}
+.reach-bar{position:relative;height:22px;direction:ltr;border-radius:6px;background:repeating-linear-gradient(90deg,#1c1612 0 calc(16.666% - 1px),#2c231d calc(16.666% - 1px) 16.666%)}
+.reach-bar i{position:absolute;inset:0 auto 0 0;border-radius:6px;transition:width .9s var(--ease)}
+.reach-bar .st{background:#57493e;z-index:1}
+.reach-bar .cu{background:linear-gradient(90deg,#ffe2b0,#ffb054 40%,rgba(255,106,31,.25));box-shadow:0 0 22px rgba(255,176,84,.45)}
+.reach-t{display:flex;justify-content:space-between;direction:ltr;font-size:10.5px;color:var(--dim);margin-top:4px}
+.panel{display:grid;gap:14px}
+.card2{background:linear-gradient(180deg,#1d1713,#16110e);border:1px solid var(--line);border-radius:20px;padding:18px}
+.card2 h3{margin:0 0 12px;font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card2 h3 small{font-weight:400;color:var(--dim);font-size:12px}
+.presets{display:flex;flex-wrap:wrap;gap:8px}
+.chipb{background:#120e0c;border:1px solid var(--line2);color:#e2d3c4;border-radius:99px;padding:8px 14px;font-weight:600;font-size:13.5px;cursor:pointer;transition:.2s}
+.chipb:hover{border-color:#5a4434}
+.chipb.on{border-color:var(--ember);background:rgba(255,106,31,.12);color:#fff}
+.catrow{margin-top:12px}.catrow:first-child{margin-top:0}
+.catrow>span{display:block;font-size:11.5px;font-weight:600;color:var(--ember2);letter-spacing:.3px;margin-bottom:7px}
+.parts{display:flex;flex-wrap:wrap;gap:7px}
+.pt{display:inline-flex;align-items:center;gap:7px;background:#120e0c;border:1px solid var(--line2);border-radius:11px;padding:7px 10px;font-size:13px;font-weight:500;color:#d8c8ba;cursor:pointer;transition:.18s}
+.pt small{color:var(--dim);font-size:11px;direction:ltr}
+.pt:hover{border-color:#5a4434}
+.pt.on{border-color:var(--ember);background:rgba(255,106,31,.14);color:#fff}
+.pt.on small{color:var(--ember2)}
+.seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg3 button{background:#120e0c;border:1px solid var(--line2);border-radius:11px;padding:9px 6px;font-weight:600;font-size:13px;color:#d8c8ba;cursor:pointer}
+.seg3 button.on{border-color:var(--ember);background:rgba(255,106,31,.14);color:#fff}
+.fx{display:grid;gap:3px}
+.fxr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;background:rgba(12,9,8,.6);border:1px solid #2a211b}
+.fxr span{font-size:13px;color:#d8c8ba;display:block}
+.fxr small{display:block;font-size:11px;color:var(--dim)}
+.fxr b{font-size:15px;white-space:nowrap}
+.fxr.good b{color:var(--ok)}.fxr.bad b{color:var(--bad)}
+@media (max-width:980px){.cfg{grid-template-columns:1fr}.viewer{position:relative;top:0}}
+
+/* ---------- steps, cars, makers, download, credits */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+.step{background:linear-gradient(180deg,#1d1713,#16110e);border:1px solid var(--line);border-radius:20px;padding:26px;position:relative;overflow:hidden}
+.step::before{counter-increment:s;content:counter(s);position:absolute;top:-18px;inset-inline-end:10px;font-size:110px;font-weight:700;line-height:1;color:rgba(255,106,31,.07)}
+.step .ic{width:48px;height:48px;border-radius:14px;background:var(--sunset);display:grid;place-items:center;color:#1c0b03;margin-bottom:16px;box-shadow:var(--glow)}
+.step .ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.step h3{margin:0 0 6px;font-size:19px}
+.step p{margin:0;color:var(--muted);font-size:15px}
+@media (max-width:860px){.steps{grid-template-columns:1fr}}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:22px}
+.chip{background:#1b1512;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:7px 14px;font:500 14px var(--sans);cursor:pointer}
+.chip.on{border-color:var(--ember);color:var(--text);background:rgba(255,106,31,.1)}
+.search{flex:1;min-width:200px;max-width:340px;margin-inline-start:auto;background:#140f0d;border:1px solid var(--line2);border-radius:12px;padding:10px 14px;color:var(--text);font:inherit;outline:none}
+.search:focus{border-color:var(--ember)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.card{background:linear-gradient(180deg,#1e1814,#16110e);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;transition:.2s}
+.card:hover{border-color:#5a4030;transform:translateY(-2px)}
+.thumb{aspect-ratio:16/10;background:radial-gradient(70% 80% at 50% 30%,#3a2516,#120d0b);display:grid;place-items:center;position:relative}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .badge{position:absolute;top:12px;inset-inline-start:12px;background:rgba(12,9,8,.82)}
+.cbody{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
+.cbody h3{margin:0;font-size:17px}
+.cbody .by{color:var(--muted);font-size:13.5px}
+.cfoot{display:flex;gap:8px;align-items:center;margin-top:auto;padding-top:10px}
+.cfoot .btn{flex:1;justify-content:center;white-space:nowrap;padding-inline:12px}.cfoot .btn.primary{flex:1.6}
+.soon{display:grid;grid-template-columns:1.2fr 1fr;gap:0;border:1px solid var(--line);border-radius:26px;overflow:hidden;background:linear-gradient(180deg,#1d1713,#15100d)}
+.soon img{width:100%;height:100%;object-fit:cover;min-height:240px;background:radial-gradient(70% 60% at 50% 45%,#2a1c13,#0c0a09)}
+.soon div{padding:34px;display:grid;gap:10px;align-content:center}
+.soon h3{margin:0;font-size:26px}
+.soon p{margin:0;color:var(--muted)}
+@media (max-width:820px){.soon{grid-template-columns:1fr}}
+.split{display:grid;grid-template-columns:1fr 1.1fr;gap:28px;align-items:start}
+.code{background:#0b0908;border:1px solid var(--line);border-radius:16px;padding:18px 20px;font:13px/1.65 Consolas,"Cascadia Mono",monospace;color:#d9c6b4;direction:ltr;text-align:left;overflow:auto;white-space:pre;margin:0;min-width:0}
+.code .k{color:#ffb054}.code .s{color:#9ad6a8}.code .n{color:#8cc4ff}.code .c{color:#75665c}
+.list{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-direction:column;gap:10px}
+.list li{display:flex;gap:12px;color:#cbb9aa}
+.list li::before{content:"";flex:none;width:8px;height:8px;margin-top:10px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 4px rgba(255,106,31,.15)}
+@media (max-width:900px){.split{grid-template-columns:1fr}}
+.credits{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.cr{background:#17120f;border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-size:14px}
+.cr b{display:block}.cr span{color:var(--muted);font-size:13px}
+details{background:#17120f;border:1px solid var(--line);border-radius:16px;padding:4px 20px;margin-bottom:10px}
+summary{cursor:pointer;padding:14px 0;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::after{content:"+";color:var(--ember2);font-size:22px;line-height:1}
+details[open] summary::after{content:"−"}
+details p{margin:0 0 16px;color:var(--muted)}
+.band{border-radius:30px;padding:46px;background:radial-gradient(600px 300px at 15% 0%,rgba(255,176,84,.25),transparent 70%),linear-gradient(135deg,#2a160c,#170f0b);border:1px solid #4a2c1a;display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center}
+.band img{width:96px;height:96px;border-radius:26px;box-shadow:var(--glow)}
+.band h2{margin:0 0 6px}
+.band p{margin:0;color:#cbb9aa}
+.req{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media (max-width:860px){.band{grid-template-columns:1fr;text-align:center;padding:30px 22px}.band img{margin:0 auto}.req{justify-content:center}}
+footer{border-top:1px solid var(--line);padding-block:34px 50px;color:var(--dim);font-size:13.5px}
+footer .wrap{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap}
+.reveal{transition:transform .8s var(--ease)}
+.reveal.pre{transform:translateY(22px)}
+@media (prefers-reduced-motion:reduce){.reveal,.reveal.pre{transform:none;transition:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="wrap">
+  <a class="brand" href="#top"><img src="logo-mark.svg" alt=""><div class="wm"><b>OTH</b><span>CAR STUDIO</span></div></a>
+  <div class="links"><a href="#top">السيارات</a><a href="#build">جهّز سيارتك</a><a href="#cars">التحميل</a><a href="#how">شلون يشتغل</a><a href="#make">للمصممين</a><a href="#credits">الحقوق</a></div>
+  <a class="btn small primary" href="#download">نزّل التطبيق</a>
+</div></nav>
+
+<!-- ============ shelf ============ -->
+<section class="shelf-sec" id="top" aria-label="رف السيارات">
+  <div class="halftone a" id="htA" aria-hidden="true">LEXUS</div>
+  <div class="halftone b" id="htB" aria-hidden="true">2025</div>
+  <div class="kicker"><b>سيارتك الحقيقية، <em>فوق التل.</em></b><span>اسحب الرف وافتح أي سيارة حتى تنزلها أو تجربها</span></div>
+  <div class="floor" aria-hidden="true"></div>
+  <div class="shelf" id="shelf"><div class="stage" id="stage"></div></div>
+  <button class="ring" id="ring" aria-label="افتح تفاصيل السيارة"><svg viewBox="0 0 16 16"><path d="M6 2H2v4M10 14h4v-4M2 2l5 5M14 14l-5-5"/></svg></button>
+  <div class="caption" aria-live="polite">
+    <div class="mask cap-title" id="capTitle"><span></span></div>
+    <div class="mask cap-sub" id="capSub"><span></span></div>
+    <div class="cap-rule"></div>
+    <div class="mask cap-meta" id="capMeta"><span></span></div>
+  </div>
+  <button class="arrow l" id="arrL" aria-label="السيارة اللي على اليسار"><svg viewBox="0 0 25 12"><path d="M6 1L1 6l5 5M1 6h23"/></svg></button>
+  <button class="arrow r" id="arrR" aria-label="السيارة اللي على اليمين"><svg viewBox="0 0 25 12"><path d="M19 1l5 5-5 5M24 6H1"/></svg></button>
+  <div class="ruler" id="ruler" aria-hidden="true"><div class="line"></div><div class="dot" id="rDot"></div><span class="unit">LENGTH · M</span></div>
+  <div class="grain" aria-hidden="true"></div>
+</section>
+<div class="cursor" id="cursor" aria-hidden="true"><div class="cr"></div><div class="cd"></div><div class="cl">افتح</div></div>
+
+<!-- ============ detail sheet ============ -->
+<div class="detail" id="detail" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <div class="d-brand">OTH CAR STUDIO —— CAR SHEET</div>
+  <button class="d-close" id="dClose">✕ BACK</button>
+  <div class="detail-in">
+    <div class="d-col">
+      <div class="dm"><span class="d-sub" id="dSub"></span></div>
+      <div class="dm"><h2 class="d-title" id="dTitle"></h2></div>
+      <div class="dm"><span class="d-meta" id="dMeta"></span></div>
+      <div class="dm"><p class="d-desc" id="dDesc"></p></div>
+      <div class="dm"><div class="d-specs" id="dSpecs"></div></div>
+      <div class="dm"><span class="d-basis" id="dBasis"></span></div>
+      <div class="dm"><div class="d-acts"><button class="d-go" id="dGo">افتحها بالمجهّز ←</button><a class="d-go d-dl" id="dDl" hidden>نزّل السيارة</a></div></div>
+    </div>
+    <svg class="d-poster" id="dPoster" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <filter id="ink" x="-30%" y="-30%" width="160%" height="160%"><feTurbulence type="fractalNoise" baseFrequency=".011" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="120" xChannelSelector="R" yChannelSelector="G"/></filter>
+        <mask id="blots"><g filter="url(#ink)" fill="#fff" id="blotG"></g></mask>
+      </defs>
+      <image id="dImg" width="1000" height="800" preserveAspectRatio="xMidYMid slice" mask="url(#blots)"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ============ configurator ============ -->
+<section class="build" id="build"><div class="wrap">
+  <div class="sec-head reveal"><span class="eyebrow">جهّز سيارتك</span><h2>كل قطعة تغيّر السيارة فعلاً</h2><p class="lead">ركّب المعدات على السيارة وشوف الأرقام تتغير: الوزن، مركز الثقل، سحب الهوا، ومدى الضوء. نفس الحساب يشتغل باللعبة.</p></div>
+  <div class="cfg">
+    <div class="viewer reveal" id="viewer">
+      <div class="v-top">
+        <div class="daynight" role="group" aria-label="نهار أو ليل"><button id="bDay" class="on">☀ نهار</button><button id="bNight">🌙 ليل</button></div>
+        <div class="swatches" id="swatches" role="group" aria-label="لون السيارة"></div>
+      </div>
+      <div class="v-stage"><canvas id="cv" width="1600" height="1000" role="img" aria-label="السيارة وعليها المعدات المختارة"></canvas>
+      <div class="v-load" id="vLoad">يحمّل…</div>
+      <div class="v-credit" id="vCredit"></div></div>
+      <div class="reach">
+        <div class="reach-h"><span>مدى الإضاءة لقدام (لحد 1 لوكس)</span><b class="num" id="reachN">200 m</b></div>
+        <div class="reach-bar"><i class="cu" id="reachCu" style="width:33.3%"></i><i class="st" id="reachSt" style="width:33.3%"></i></div>
+        <div class="reach-t"><span>0</span><span>100</span><span>200</span><span>300</span><span>400</span><span>500</span><span>600 m</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="card2 reveal"><h3>السيارة</h3><div class="presets" id="carPick"></div></div>
+      <div class="card2 reveal"><h3>تجهيزات جاهزة</h3><div class="presets" id="presets"></div></div>
+      <div class="card2 reveal"><h3>المعدات <small id="ptCount"></small></h3><div id="ptList"></div></div>
+      <div class="card2 reveal"><h3>نوع التاير</h3><div class="seg3" id="tyres"></div></div>
+      <div class="card2 reveal"><h3>التأثير على السيارة <small>أرقام قطع حقيقية</small></h3><div class="fx" id="fx"></div></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <div class="sec-head reveal"><span class="eyebrow">شلون يشتغل</span><h2>ثلاث خطوات وتسوق</h2><p class="lead">ما تحتاج Unity ولا Blender. التطبيق ينصب كلشي يحتاجه وحده.</p></div>
+  <div class="steps">
+    <div class="step reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 19h14"/></svg></div><h3>نزّل التطبيق</h3><p>أول مرة يجهز اللعبة بزر واحد: MelonLoader والمود والأصوات.</p></div>
+    <div class="step reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 15h16l-1.6-5a2 2 0 0 0-1.9-1.4H7.5A2 2 0 0 0 5.6 10Z"/><circle cx="7.5" cy="16.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/></svg></div><h3>اختار سيارة</h3><p>نزّل ملف <span class="ltr">.othcar</span> من هنا ودبل كلك عليه. تنحط باللعبة مباشرة.</p></div>
+    <div class="step reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></div><h3>عدّلها وسوق</h3><p>بالاستوديو 3D: رفع، تواير، معدات وصبغ. باللعبة F8 وتختار سيارتك.</p></div>
+  </div>
+</div></section>
+
+<section id="cars"><div class="wrap">
+  <div class="sec-head reveal"><span class="eyebrow">السيارات</span><h2>اختار سيارتك</h2><p class="lead">كل سيارة مجهزة ومفحوصة: عجلات، أضوية، ستيرن، وحقوق صاحبها مذكورة.</p></div>
+  <div id="carsWrap"></div>
+</div></section>
+
+<section id="make"><div class="wrap split">
+  <div class="reveal">
+    <span class="eyebrow">للمصممين</span><h2>سوّي قطعتك أو سيارتك</h2>
+    <p class="lead">صيغتين رسميات، ملف zip بسيط بيه موديل glb وملف وصف:</p>
+    <ul class="list">
+      <li><span><b class="ltr">.othcar</b>: سيارة كاملة. تنصنع من التطبيق بوضع المصمم (يحول موديلات Sketchfab بـ Blender) وبعدين «احفظها كملف <span class="ltr">.othcar</span>».</span></li>
+      <li><span><b class="ltr">.othacc</b>: قطعة أوف رود. موديل بالمتر، نقطة الأصل مكان التركيب، والوجه لقدام. الوزن والإضاءة يتحسبون باللعبة وحدهم.</span></li>
+      <li><span>اذكر صاحب الموديل ورخصته بالـ <span class="ltr">credit</span>. ما ننشر موديل مسحوب من لعبة ثانية أو رخصته ما تسمح.</span></li>
+    </ul>
+  </div>
+  <pre class="code reveal"><span class="c">// manifest.json  (inside your .othacc)</span>
+{
+  <span class="k">"format"</span>: <span class="s">"othacc"</span>, <span class="k">"version"</span>: <span class="n">1</span>,
+  <span class="k">"part"</span>: {
+    <span class="k">"id"</span>: <span class="s">"rhino_bar_50"</span>,
+    <span class="k">"name"</span>: <span class="s">"ليت بار 50 انج"</span>,
+    <span class="k">"mount"</span>: <span class="s">"roof"</span>,        <span class="c">// roof | front | rear | side | bed</span>
+    <span class="k">"mass_kg"</span>: <span class="n">11.5</span>,
+    <span class="k">"pos"</span>: { <span class="k">"x"</span>: <span class="n">0</span>, <span class="k">"y"</span>: <span class="n">1.02</span>, <span class="k">"z"</span>: <span class="n">0.32</span> },
+    <span class="k">"cda_m2"</span>: <span class="n">0.035</span>,
+    <span class="k">"light"</span>: { <span class="k">"lumens"</span>: <span class="n">26000</span>, <span class="k">"beam_deg"</span>: <span class="n">24</span>,
+               <span class="k">"kelvin"</span>: <span class="n">5700</span>, <span class="k">"node"</span>: <span class="s">"led"</span> }
+  },
+  <span class="k">"credit"</span>: { <span class="k">"author"</span>: <span class="s">"you"</span>, <span class="k">"license"</span>: <span class="s">"CC-BY-4.0"</span>,
+              <span class="k">"source"</span>: <span class="s">"https://…"</span> }
+}
+
+<span class="c">&gt; OTHCarStudio.exe --cli makepart part.glb manifest.json my_bar.othacc</span></pre>
+</div></section>
+
+<section id="download"><div class="wrap">
+  <div class="band reveal">
+    <img src="logo-mark.svg" alt="">
+    <div>
+      <h2>نزّل OTH Car Studio</h2>
+      <p>برنامج واحد لويندوز. يجهز اللعبة وحده، وبعدها بس فلت ملفات السيارات عليه.</p>
+      <div class="req"><span class="badge">Windows 10 / 11</span><span class="badge">Over the Hill على Steam</span><span class="badge ok">MelonLoader ينصب تلقائياً</span></div>
+    </div>
+    <a class="btn primary" id="dlMain">قريباً</a>
+  </div>
+</div></section>
+
+<section id="credits"><div class="wrap">
+  <div class="sec-head reveal"><span class="eyebrow">الحقوق</span><h2>كل الفضل لأصحابه</h2><p class="lead">الموديلات والأصوات والأدوات اللي يستخدمها المشروع، ورخصة كل وحدة.</p></div>
+  <div class="credits" id="creditList"></div>
+  <h3 style="margin:56px 0 16px;font-size:22px">أسئلة</h3>
+  <details><summary>مجاني؟</summary><p>إي، كله مجاني. هواية موديلات السيارات رخصتها «غير تجاري» (NC)، فما نبيع شي ولا نحط إعلانات.</p></details>
+  <details><summary>شنو أحتاج؟</summary><p>ويندوز واللعبة من Steam بس. التطبيق ينصب MelonLoader والمود وأصوات المحركات وحده.</p></details>
+  <details><summary>الأرقام حقيقية؟</summary><p>وزن كل قطعة وقوة ضوءها من مواصفات قطع حقيقية من نفس النوع. الحساب فيزياء بسيطة: مركز الثقل من أوزان القطع ومكانها، سحب الهوا من مساحة القطعة، ومدى الضوء من اللومنات وزاوية الشعاع. هي تقريب مو قياس مختبر.</p></details>
+  <details><summary>يخرب اللعبة؟</summary><p>لا. المود يبدل شكل السيارة وتصرفها بس، وتكدر ترجع للأصلي بـ F8 أو تشيل المود من التطبيق.</p></details>
+  <details><summary>أكدر أنشر سيارتي هنا؟</summary><p>إي. سوّيها بوضع المصمم، تأكد إن رخصة الموديل تسمح بإعادة النشر (CC-BY أو CC-BY-NC أو CC-BY-SA أو CC0) واذكر صاحبه، وبعدين دزها إلنا.</p></details>
+</div></section>
+
+<footer><div class="wrap">
+  <span>OTH Car Studio · مشروع مجتمعي غير رسمي، ما مرتبط بمطوري Over the Hill.</span>
+  <span>أسماء وشعارات السيارات ملك شركاتها. كل موديل ملك صاحبه حسب رخصته.</span>
+</div></footer>
+
+<script id="data-site" type="application/json">{"download": "", "version": "1.1.0"}</script>
+<script id="data-cars" type="application/json">[{"id": "2024_ford_f_150_raptor_r", "name": "2024 Ford F-150 Raptor R", "type": "pickup", "url": "files/2024_ford_f_150_raptor_r.othcar", "size": 13093693, "preview": "files/previews/2024_ford_f_150_raptor_r.png", "credit": {"title": "2024_ford_f-150_raptor_r", "author": "007 (https://sketchfab.com/tangwang920)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/2024-ford-f-150-raptor-r-11b2d3c304ee474195f06fa8315d247b"}, "acc": []}, {"id": "2024_gmc_hummer_ev_suv", "name": "2024 GMC Hummer EV SUV", "type": "suv", "url": "files/2024_gmc_hummer_ev_suv.othcar", "size": 20519129, "preview": "files/previews/2024_gmc_hummer_ev_suv.png", "credit": {"title": "2024 GMC Hummer EV SUV", "author": "Ddiaz Design (https://sketchfab.com/ddiaz-design)", "license": "CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)", "source": "https://sketchfab.com/3d-models/2024-gmc-hummer-ev-suv-7cd584fc9ba54acd9002d4286a08e419"}, "acc": []}, {"id": "2024_gmc_sierra_1500_at4x", "name": "2024 GMC Sierra 1500 AT4X", "type": "pickup", "url": "files/2024_gmc_sierra_1500_at4x.othcar", "size": 17454721, "preview": "files/previews/2024_gmc_sierra_1500_at4x.png", "credit": {"title": "2024 GMC Sierra 1500 AT4X", "author": "Ddiaz Design (https://sketchfab.com/ddiaz-design)", "license": "CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)", "source": "https://sketchfab.com/3d-models/2024-gmc-sierra-1500-at4x-41d0b29e3d2f4854a9b6349ccf918a1e"}, "acc": []}, {"id": "2025_lexus_lx700h", "name": "2025 Lexus LX700h", "type": "suv", "url": "files/2025_lexus_lx700h.othcar", "size": 10259152, "preview": "files/previews/2025_lexus_lx700h.png", "credit": {"title": "2025 Lexus LX700h", "author": "Ddiaz Design (https://sketchfab.com/ddiaz-design)", "license": "CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)", "source": "https://sketchfab.com/3d-models/2025-lexus-lx700h-1dd2df7c68e74ca3a3ea83fb6c4bd1a2"}, "acc": ["bullbar", "snorkel", "rack", "tent", "boards", "steps", "spare"]}, {"id": "toyota_land_cruiser_gr_sport", "name": "Toyota Land Cruiser 300 GR Sport", "type": "suv", "url": "files/toyota_land_cruiser_gr_sport.othcar", "size": 25815693, "preview": "files/previews/toyota_land_cruiser_gr_sport.png", "credit": {"title": "Toyota GR Land Cruiser", "author": "Nieve5677 (https://sketchfab.com/niev)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/toyota-gr-land-cruiser-5d311e17fee047989a1241f10e838a0a"}, "acc": []}]</script>
+<script id="data-parts" type="application/json">[]</script>
+<script id="data-catalog" type="application/json">{"format": "oth-parts", "version": 2, "notes": "Typical real-world figures for each part class (mid-range products). pos: x -0.5..0.5 (left..right), y 0..1 (body bottom..roof), z -0.5..0.5 (rear..front) of the car body box. cda_m2 = extra drag area. light: lumens (effective), beam_deg (full angle), kelvin, dir front|rear|down. tyres: grip multiplier, rolling resistance coefficient, extra kg per tyre.", "physics": {"air_density": 1.225, "optic_efficiency": 0.85, "stock_high_beam_cd": 40000, "sprung_fraction": 0.85, "tyre_mass_kg": 40, "tyre_mass_exponent": 2.5, "stock_wading_m": 0.7, "crr_base": 0.012, "gravity": 9.81}, "parts": [{"id": "bullbar", "cat": "protection", "name": "صدام حماية + ونش", "name_en": "Steel bull bar + 10,000 lb winch", "mass_kg": 95, "pos": {"x": 0, "y": 0.32, "z": 0.5}, "cda_m2": 0.02, "light": {"lumens": 8000, "beam_deg": 30, "kelvin": 5700, "node": "acc_bullbar_led", "dir": "front"}, "icon": "⛨", "basis": "bar 55-65 kg + winch 30-36 kg", "desc": "صدام حديد يحمي المقدمة والرادييتر من الصخور والحيوانات، وبيه ونش 4.5 طن وكشافين. ثقيل وعلى أول السيارة، فالمقدمة تنزل شوية."}, {"id": "rearbar", "cat": "protection", "name": "صدام خلفي حديد", "name_en": "Steel rear bar with recovery points", "mass_kg": 62, "pos": {"x": 0, "y": 0.3, "z": -0.5}, "cda_m2": 0.01, "icon": "▟", "basis": "plate-steel rear bar 55-70 kg", "desc": "صدام خلفي من صفايح حديد بنقاط سحب وكلّاب قطر. يحمي زوايا السيارة من ورا بالنزلات الحادة."}, {"id": "skid", "cat": "protection", "name": "دروع سفلية", "name_en": "Underbody skid plates (3 piece)", "mass_kg": 42, "pos": {"x": 0, "y": 0.0, "z": 0.15}, "cda_m2": 0.0, "icon": "▰", "basis": "engine + gearbox + transfer set, 4-6 mm, 35-50 kg", "desc": "ثلاث صفايح تحت المحرك والگير وعلبة الدفع. وزنها بأوطى نقطة، فتنزّل مركز الثقل وتحمي بطن السيارة من الصخر."}, {"id": "steps", "cat": "protection", "name": "حماية جانبية", "name_en": "Steel rock sliders", "mass_kg": 30, "pos": {"x": 0, "y": 0.05, "z": 0}, "cda_m2": 0.0, "icon": "▬", "basis": "steel sliders 25-35 kg the pair", "desc": "مواسير حديد على طول الجوانب تشيل وزن السيارة إذا ركبت على صخرة، وتنفع دعاسة."}, {"id": "flares", "cat": "protection", "name": "رفارف عريضة", "name_en": "Fender flares (set of 4)", "mass_kg": 9, "pos": {"x": 0, "y": 0.45, "z": 0}, "cda_m2": 0.02, "icon": "◠", "basis": "ABS pocket-style flares 8-10 kg", "desc": "رفارف أعرض تغطي التواير الكبيرة والبارزة وتمنع الطين يتطاير على الجام."}, {"id": "mudflaps", "cat": "protection", "name": "واقيات طين", "name_en": "Mud flaps (set of 4)", "mass_kg": 4, "pos": {"x": 0, "y": 0.15, "z": -0.05}, "cda_m2": 0.01, "icon": "▯", "basis": "rubber flaps ~1 kg each", "desc": "واقيات مطاط ورا كل تاير. خفيفة وتحمي الصبغ من الحصو."}, {"id": "boards", "cat": "recovery", "name": "ألواح تخليص", "name_en": "Recovery boards (pair)", "mass_kg": 7.4, "pos": {"x": -0.47, "y": 1.04, "z": 0.1}, "cda_m2": 0.012, "needs": "rack", "icon": "▤", "basis": "2 x 3.7 kg", "desc": "لوحين تحطهم تحت التواير إذا غرزت بالرمل أو الطين. ينشدّن على جنب المنصة."}, {"id": "hilift", "cat": "recovery", "name": "جك هاي لفت", "name_en": "48 in farm jack", "mass_kg": 14, "pos": {"x": -0.42, "y": 0.6, "z": -0.52}, "cda_m2": 0.005, "icon": "⟙", "basis": "48 in cast/steel jack 13-14 kg", "desc": "جك ميكانيكي 120 سم يرفع السيارة من الصدام أو الجنط، وينفع ونش يدوي. مثبت ورا على اليسار."}, {"id": "tools", "cat": "recovery", "name": "مجرفة وفاس", "name_en": "Shovel + axe with mounts", "mass_kg": 4.5, "pos": {"x": 0.47, "y": 1.08, "z": 0}, "cda_m2": 0.006, "needs": "rack", "icon": "⚒", "basis": "shovel 2.2 kg + axe 1.6 kg + clamps", "desc": "مسحاة وفاس على مشابك سريعة يم المنصة. أول شي تحتاجه من تغرز."}, {"id": "jerry", "cat": "recovery", "name": "جراكن وقود", "name_en": "2 x 20 L jerry cans (full) + holder", "mass_kg": 46, "pos": {"x": 0.4, "y": 0.5, "z": -0.55}, "cda_m2": 0.01, "icon": "⛽", "basis": "2 x (4.2 kg can + 16.8 kg diesel) + 4 kg holder", "desc": "جلكانين 20 لتر ديزل مليانات بحامل ورا. 46 كيلو عالية وورا المحور، تحس بيها بالطلعات."}, {"id": "lightbar", "cat": "lighting", "name": "ليت بار 40 انج", "name_en": "40 in LED light bar (combo beam)", "mass_kg": 9, "pos": {"x": 0, "y": 1.02, "z": 0.3}, "cda_m2": 0.03, "light": {"lumens": 20000, "beam_deg": 26, "kelvin": 5700, "node": "acc_lightbar_led", "dir": "front"}, "icon": "☀", "basis": "40 in combo bar 18-24k lm", "desc": "ليت بار 40 انج فوق الجامة. 20 ألف لومن بشعاع مركّب، يوصل حوالي 325 متر."}, {"id": "pods", "cat": "lighting", "name": "كشافات العمود", "name_en": "A-pillar LED spot pods (pair)", "mass_kg": 2.4, "pos": {"x": 0, "y": 0.78, "z": 0.2}, "cda_m2": 0.008, "light": {"lumens": 9800, "beam_deg": 12, "kelvin": 5700, "node": "acc_pods_led", "dir": "front"}, "icon": "◉", "basis": "2 x 4900 lm spot", "desc": "كشافين سبوت على أعمدة الجامة. شعاع ضيق 12 درجة يوصل لـ 490 متر، أبعد ضوء بالعدة."}, {"id": "fogs", "cat": "lighting", "name": "ضباب أصفر", "name_en": "Amber LED fog lamps (pair)", "mass_kg": 2.6, "pos": {"x": 0, "y": 0.28, "z": 0.5}, "cda_m2": 0.002, "light": {"lumens": 3800, "beam_deg": 70, "kelvin": 3000, "node": "acc_fogs_led", "dir": "front", "color": "FFB020"}, "icon": "◐", "basis": "2 x 1900 lm, SAE fog pattern, selective yellow", "desc": "ضبابين أصفر واطيين بشعاع عريض 70 درجة. ما يوصلون بعيد، بس يكشفون جوانب الدرب والحفر القريبة."}, {"id": "worklight", "cat": "lighting", "name": "أضوية شغل خلفية", "name_en": "Rear scene / work lights (pair)", "mass_kg": 1.8, "pos": {"x": 0, "y": 1.0, "z": -0.35}, "cda_m2": 0.004, "light": {"lumens": 4400, "beam_deg": 90, "kelvin": 5700, "node": "acc_worklight_led", "dir": "rear"}, "icon": "◑", "basis": "2 x 2200 lm flood", "desc": "كشافين فلود ورا السقف يضوّن المخيم وورا السيارة. ما يزيدون مدى الضوء لقدام."}, {"id": "rocklights", "cat": "lighting", "name": "روك لايت", "name_en": "Rock lights (8 pods)", "mass_kg": 1.6, "pos": {"x": 0, "y": 0.05, "z": 0}, "cda_m2": 0.0, "light": {"lumens": 3200, "beam_deg": 120, "kelvin": 6000, "node": "acc_rocklights_led", "dir": "down"}, "icon": "✺", "basis": "8 x 400 lm under-body pods", "desc": "ثمن نقاط ضوء جوه السيارة تضوّي الأرض حول التواير، حتى تشوف الصخر بالليل."}, {"id": "rack", "cat": "roof", "name": "منصة سقف", "name_en": "Aluminium roof platform", "mass_kg": 36, "pos": {"x": 0, "y": 1.0, "z": -0.05}, "cda_m2": 0.05, "icon": "▦", "basis": "full-length platform 30-40 kg", "desc": "منصة ألمنيوم على طول السقف. أساس كل عدة السقف: الخيمة والصندوق والمظلة والألواح."}, {"id": "tent", "cat": "roof", "name": "خيمة سقف", "name_en": "Hard-shell roof tent", "mass_kg": 65, "pos": {"x": 0, "y": 1.12, "z": -0.1}, "cda_m2": 0.14, "needs": "rack", "conflicts": ["roofbox"], "icon": "⛺", "basis": "hard-shell RTT 55-75 kg", "desc": "خيمة سقف بغطا صلب تنفتح بدقيقة. 65 كيلو بأعلى نقطة، أكثر قطعة ترفع مركز الثقل وتزيد سحب الهوا."}, {"id": "roofbox", "cat": "roof", "name": "صندوق سقف", "name_en": "Roof cargo box 450 L", "mass_kg": 21, "pos": {"x": 0, "y": 1.12, "z": -0.08}, "cda_m2": 0.09, "needs": "rack", "conflicts": ["tent"], "icon": "▭", "basis": "450 L ABS box 18-24 kg (empty)", "desc": "صندوق سقف 450 لتر للعفش. أخف من الخيمة وأنعم بالهوا. ما ينحط وية الخيمة."}, {"id": "awning", "cat": "roof", "name": "مظلة جانبية", "name_en": "2.5 m side awning", "mass_kg": 19, "pos": {"x": 0.47, "y": 1.0, "z": -0.05}, "cda_m2": 0.03, "needs": "rack", "icon": "◹", "basis": "2.5 x 2.5 m awning 16-22 kg", "desc": "مظلة 2.5 متر تنسحب من جنب المنصة. ظل للگعدة بالبر."}, {"id": "snorkel", "cat": "touring", "name": "سنوركل", "name_en": "Raised air intake (snorkel)", "mass_kg": 5, "pos": {"x": 0.45, "y": 0.8, "z": 0.18}, "cda_m2": 0.004, "wading_m": 0.25, "icon": "⌇", "basis": "polyethylene snorkel 4-6 kg", "desc": "يرفع مدخل هوا المحرك لمستوى السقف. يزيد عمق الخوض بالماي 25 سم ويسحب هوا أنظف من العجاج."}, {"id": "spare", "cat": "touring", "name": "تاير احتياط خلفي", "name_en": "Rear swing-out carrier + spare", "mass_kg": 52, "pos": {"x": 0, "y": 0.45, "z": -0.55}, "cda_m2": 0.01, "icon": "◎", "basis": "wheel+tyre ~32 kg + carrier ~20 kg", "desc": "تاير احتياط على حامل يفتح ورا. 52 كيلو ورا المحور الخلفي."}, {"id": "antenna", "cat": "touring", "name": "انتين لاسلكي", "name_en": "UHF whip antenna", "mass_kg": 1.2, "pos": {"x": -0.4, "y": 0.6, "z": 0.5}, "cda_m2": 0.003, "icon": "⌁", "basis": "1.2 m fibreglass whip + spring base", "desc": "انتين لاسلكي 1.2 متر بقاعدة سبرنگ على المقدمة. للتواصل وية الجماعة بالقافلة."}], "categories": [{"id": "protection", "name": "حماية"}, {"id": "recovery", "name": "تخليص"}, {"id": "lighting", "name": "إضاءة"}, {"id": "roof", "name": "السقف والتخييم"}, {"id": "touring", "name": "رحلات"}], "tyres": [{"id": "ht", "name": "طريق H/T", "name_en": "Highway terrain", "grip": 0.95, "crr": 0.009, "mass_kg": -2, "note": "أخف وأهدأ وأقل سحب، بس تماسكه بالبر أقل"}, {"id": "at", "name": "كل التضاريس A/T", "name_en": "All terrain", "grip": 1.0, "crr": 0.012, "mass_kg": 0, "note": "الأساس: توازن بين الشارع والبر"}, {"id": "mt", "name": "طين M/T", "name_en": "Mud terrain", "grip": 1.09, "crr": 0.017, "mass_kg": 5, "note": "أقوى تماسك بالطين والصخر، أثقل ويسحب أكثر"}]}</script>
+<script>
+"use strict";
+const J = id => { try { return JSON.parse(document.getElementById(id).textContent); } catch (e) { return null; } };
+const SITE = J("data-site") || {}, CARS = J("data-cars") || [], CUSTOM = J("data-parts") || [], CAT = J("data-catalog") || {};
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const mb = n => n ? "\u2066" + (n / 1048576).toFixed(1) + " MB\u2069" : "";
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const PH = CAT.physics || { air_density: 1.225, optic_efficiency: .85, stock_high_beam_cd: 40000, sprung_fraction: .85, tyre_mass_kg: 40, tyre_mass_exponent: 2.5, stock_wading_m: .7 };
+/*BUILDS*/const BUILDS = [{"id": "lexus_overland_C2B280_d", "car": "lexus", "carName": "لكزس LX700h", "preset": "overland", "paint": "C2B280", "night": 0, "name": "أوفرلاند رملي", "en": "LX700h OVERLAND · SAND", "tyre": "at", "acc": ["bullbar", "snorkel", "rack", "tent", "awning", "boards", "spare", "jerry", "lightbar", "steps", "worklight"], "kg": 366.2, "dh": 5.3, "reach": 325, "wading": 0.95, "lumens": 32400, "cda": 0.31}, {"id": "gmc_stock_F2F2EE_d", "car": "gmc", "carName": "جي ام سي سييرا AT4X", "preset": "stock", "paint": "F2F2EE", "night": 0, "name": "ستوك أبيض", "en": "SIERRA AT4X STOCK · WHITE", "tyre": "at", "acc": [], "kg": 0, "dh": 0.0, "reach": 200, "wading": 0.7, "lumens": 0, "cda": 0}, {"id": "raptor_stock_D9541E_d", "car": "raptor", "carName": "فورد رابتر R", "preset": "stock", "paint": "D9541E", "night": 0, "name": "ستوك برتقالي", "en": "RAPTOR R STOCK · ORANGE", "tyre": "at", "acc": [], "kg": 0, "dh": 0.0, "reach": 200, "wading": 0.7, "lumens": 0, "cda": 0}, {"id": "lcgr_stock_F2F2EE_d", "car": "lcgr", "carName": "لاندكروزر GR", "preset": "stock", "paint": "F2F2EE", "night": 0, "name": "ستوك أبيض", "en": "LC300 GR SPORT STOCK · WHITE", "tyre": "at", "acc": [], "kg": 0, "dh": 0.0, "reach": 200, "wading": 0.7, "lumens": 0, "cda": 0}, {"id": "hummer_stock_C2B280_d", "car": "hummer", "carName": "همر EV", "preset": "stock", "paint": "C2B280", "night": 0, "name": "ستوك رملي", "en": "HUMMER EV STOCK · SAND", "tyre": "at", "acc": [], "kg": 0, "dh": 0.0, "reach": 200, "wading": 0.7, "lumens": 0, "cda": 0}, {"id": "defender_stock_2F5D3A_d", "car": "defender", "carName": "ديفندر 130", "preset": "stock", "paint": "2F5D3A", "night": 0, "name": "ستوك زيتوني", "en": "DEFENDER 130 STOCK · OLIVE", "tyre": "at", "acc": [], "kg": 0, "dh": 0.0, "reach": 200, "wading": 0.7, "lumens": 0, "cda": 0}, {"id": "lexus_rally_D9541E_n", "car": "lexus", "carName": "لكزس LX700h", "preset": "rally", "paint": "D9541E", "night": 1, "name": "رالي صحراوي برتقالي", "en": "LX700h DESERT RALLY · ORANGE · NIGHT", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 2.1, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "gmc_overland_1A1A1A_d", "car": "gmc", "carName": "جي ام سي سييرا AT4X", "preset": "overland", "paint": "1A1A1A", "night": 0, "name": "أوفرلاند أسود", "en": "SIERRA AT4X OVERLAND · BLACK", "tyre": "at", "acc": ["bullbar", "snorkel", "rack", "tent", "awning", "boards", "spare", "jerry", "lightbar", "steps", "worklight"], "kg": 366.2, "dh": 6.1, "reach": 325, "wading": 0.95, "lumens": 32400, "cda": 0.31}, {"id": "raptor_rally_1A1A1A_d", "car": "raptor", "carName": "فورد رابتر R", "preset": "rally", "paint": "1A1A1A", "night": 0, "name": "رالي صحراوي أسود", "en": "RAPTOR R DESERT RALLY · BLACK", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 2.3, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "lcgr_overland_C2B280_d", "car": "lcgr", "carName": "لاندكروزر GR", "preset": "overland", "paint": "C2B280", "night": 0, "name": "أوفرلاند رملي", "en": "LC300 GR SPORT OVERLAND · SAND", "tyre": "at", "acc": ["bullbar", "snorkel", "rack", "tent", "awning", "boards", "spare", "jerry", "lightbar", "steps", "worklight"], "kg": 366.2, "dh": 5.8, "reach": 325, "wading": 0.95, "lumens": 32400, "cda": 0.31}, {"id": "hummer_rock_1A1A1A_d", "car": "hummer", "carName": "همر EV", "preset": "rock", "paint": "1A1A1A", "night": 0, "name": "تحدي صخور أسود", "en": "HUMMER EV ROCK CRAWLER · BLACK", "tyre": "mt", "acc": ["bullbar", "rearbar", "skid", "steps", "flares", "rocklights", "hilift", "boards", "rack", "snorkel"], "kg": 322.0, "dh": 0.3, "reach": 200, "wading": 0.95, "lumens": 11200, "cda": 0.121}, {"id": "defender_overland_C2B280_d", "car": "defender", "carName": "ديفندر 130", "preset": "overland", "paint": "C2B280", "night": 0, "name": "أوفرلاند رملي", "en": "DEFENDER 130 OVERLAND · SAND", "tyre": "at", "acc": ["bullbar", "snorkel", "rack", "tent", "awning", "boards", "spare", "jerry", "lightbar", "steps", "worklight"], "kg": 366.2, "dh": 5.7, "reach": 325, "wading": 0.95, "lumens": 32400, "cda": 0.31}, {"id": "lexus_rock_2F5D3A_d", "car": "lexus", "carName": "لكزس LX700h", "preset": "rock", "paint": "2F5D3A", "night": 0, "name": "تحدي صخور زيتوني", "en": "LX700h ROCK CRAWLER · OLIVE", "tyre": "mt", "acc": ["bullbar", "rearbar", "skid", "steps", "flares", "rocklights", "hilift", "boards", "rack", "snorkel"], "kg": 322.0, "dh": 0.4, "reach": 200, "wading": 0.95, "lumens": 11200, "cda": 0.121}, {"id": "gmc_rally_C2B280_n", "car": "gmc", "carName": "جي ام سي سييرا AT4X", "preset": "rally", "paint": "C2B280", "night": 1, "name": "رالي صحراوي رملي", "en": "SIERRA AT4X DESERT RALLY · SAND · NIGHT", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 2.4, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "raptor_rock_C2B280_n", "car": "raptor", "carName": "فورد رابتر R", "preset": "rock", "paint": "C2B280", "night": 1, "name": "تحدي صخور رملي", "en": "RAPTOR R ROCK CRAWLER · SAND · NIGHT", "tyre": "mt", "acc": ["bullbar", "rearbar", "skid", "steps", "flares", "rocklights", "hilift", "boards", "rack", "snorkel"], "kg": 322.0, "dh": 0.4, "reach": 200, "wading": 0.95, "lumens": 11200, "cda": 0.121}, {"id": "lcgr_rally_1A1A1A_n", "car": "lcgr", "carName": "لاندكروزر GR", "preset": "rally", "paint": "1A1A1A", "night": 1, "name": "رالي صحراوي أسود", "en": "LC300 GR SPORT DESERT RALLY · BLACK · NIGHT", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 2.2, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "hummer_overland_F2F2EE_n", "car": "hummer", "carName": "همر EV", "preset": "overland", "paint": "F2F2EE", "night": 1, "name": "أوفرلاند أبيض", "en": "HUMMER EV OVERLAND · WHITE · NIGHT", "tyre": "at", "acc": ["bullbar", "snorkel", "rack", "tent", "awning", "boards", "spare", "jerry", "lightbar", "steps", "worklight"], "kg": 366.2, "dh": 3.6, "reach": 325, "wading": 0.95, "lumens": 32400, "cda": 0.31}, {"id": "defender_rally_F2F2EE_n", "car": "defender", "carName": "ديفندر 130", "preset": "rally", "paint": "F2F2EE", "night": 1, "name": "رالي صحراوي أبيض", "en": "DEFENDER 130 DESERT RALLY · WHITE · NIGHT", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 2.2, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "lexus_camp_F2F2EE_n", "car": "lexus", "carName": "لكزس LX700h", "preset": "camp", "paint": "F2F2EE", "night": 1, "name": "تخييم أبيض", "en": "LX700h WEEKEND CAMP · WHITE · NIGHT", "tyre": "ht", "acc": ["rack", "tent", "awning", "worklight", "jerry", "tools", "spare"], "kg": 216.3, "dh": 5.6, "reach": 200, "wading": 0.7, "lumens": 4400, "cda": 0.25}, {"id": "gmc_rock_D9541E_d", "car": "gmc", "carName": "جي ام سي سييرا AT4X", "preset": "rock", "paint": "D9541E", "night": 0, "name": "تحدي صخور برتقالي", "en": "SIERRA AT4X ROCK CRAWLER · ORANGE", "tyre": "mt", "acc": ["bullbar", "rearbar", "skid", "steps", "flares", "rocklights", "hilift", "boards", "rack", "snorkel"], "kg": 322.0, "dh": 0.4, "reach": 200, "wading": 0.95, "lumens": 11200, "cda": 0.121}, {"id": "raptor_overland_2F5D3A_d", "car": "raptor", "carName": "فورد رابتر R", "preset": "overland", "paint": "2F5D3A", "night": 0, "name": "أوفرلاند زيتوني", "en": "RAPTOR R OVERLAND · OLIVE", "tyre": "at", "acc": ["bullbar", "snorkel", "rack", "tent", "awning", "boards", "spare", "jerry", "lightbar", "steps", "worklight"], "kg": 366.2, "dh": 5.9, "reach": 325, "wading": 0.95, "lumens": 32400, "cda": 0.31}, {"id": "lcgr_rock_2F5D3A_d", "car": "lcgr", "carName": "لاندكروزر GR", "preset": "rock", "paint": "2F5D3A", "night": 0, "name": "تحدي صخور زيتوني", "en": "LC300 GR SPORT ROCK CRAWLER · OLIVE", "tyre": "mt", "acc": ["bullbar", "rearbar", "skid", "steps", "flares", "rocklights", "hilift", "boards", "rack", "snorkel"], "kg": 322.0, "dh": 0.4, "reach": 200, "wading": 0.95, "lumens": 11200, "cda": 0.121}, {"id": "hummer_rally_D9541E_d", "car": "hummer", "carName": "همر EV", "preset": "rally", "paint": "D9541E", "night": 0, "name": "رالي صحراوي برتقالي", "en": "HUMMER EV DESERT RALLY · ORANGE", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 1.4, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "defender_rock_1A1A1A_d", "car": "defender", "carName": "ديفندر 130", "preset": "rock", "paint": "1A1A1A", "night": 0, "name": "تحدي صخور أسود", "en": "DEFENDER 130 ROCK CRAWLER · BLACK", "tyre": "mt", "acc": ["bullbar", "rearbar", "skid", "steps", "flares", "rocklights", "hilift", "boards", "rack", "snorkel"], "kg": 322.0, "dh": 0.4, "reach": 200, "wading": 0.95, "lumens": 11200, "cda": 0.121}, {"id": "lexus_stock_1A1A1A_d", "car": "lexus", "carName": "لكزس LX700h", "preset": "stock", "paint": "1A1A1A", "night": 0, "name": "ستوك أسود", "en": "LX700h STOCK · BLACK", "tyre": "at", "acc": [], "kg": 0, "dh": 0.0, "reach": 200, "wading": 0.7, "lumens": 0, "cda": 0}, {"id": "gmc_camp_2F5D3A_n", "car": "gmc", "carName": "جي ام سي سييرا AT4X", "preset": "camp", "paint": "2F5D3A", "night": 1, "name": "تخييم زيتوني", "en": "SIERRA AT4X WEEKEND CAMP · OLIVE · NIGHT", "tyre": "ht", "acc": ["rack", "tent", "awning", "worklight", "jerry", "tools", "spare"], "kg": 216.3, "dh": 6.4, "reach": 200, "wading": 0.7, "lumens": 4400, "cda": 0.25}, {"id": "raptor_rally_D9541E_n", "car": "raptor", "carName": "فورد رابتر R", "preset": "rally", "paint": "D9541E", "night": 1, "name": "رالي صحراوي برتقالي", "en": "RAPTOR R DESERT RALLY · ORANGE · NIGHT", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 2.3, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "lcgr_camp_D9541E_d", "car": "lcgr", "carName": "لاندكروزر GR", "preset": "camp", "paint": "D9541E", "night": 0, "name": "تخييم برتقالي", "en": "LC300 GR SPORT WEEKEND CAMP · ORANGE", "tyre": "ht", "acc": ["rack", "tent", "awning", "worklight", "jerry", "tools", "spare"], "kg": 216.3, "dh": 6.1, "reach": 200, "wading": 0.7, "lumens": 4400, "cda": 0.25}, {"id": "hummer_camp_2F5D3A_d", "car": "hummer", "carName": "همر EV", "preset": "camp", "paint": "2F5D3A", "night": 0, "name": "تخييم زيتوني", "en": "HUMMER EV WEEKEND CAMP · OLIVE", "tyre": "ht", "acc": ["rack", "tent", "awning", "worklight", "jerry", "tools", "spare"], "kg": 216.3, "dh": 3.7, "reach": 200, "wading": 0.7, "lumens": 4400, "cda": 0.25}, {"id": "defender_camp_D9541E_d", "car": "defender", "carName": "ديفندر 130", "preset": "camp", "paint": "D9541E", "night": 0, "name": "تخييم برتقالي", "en": "DEFENDER 130 WEEKEND CAMP · ORANGE", "tyre": "ht", "acc": ["rack", "tent", "awning", "worklight", "jerry", "tools", "spare"], "kg": 216.3, "dh": 6.0, "reach": 200, "wading": 0.7, "lumens": 4400, "cda": 0.25}, {"id": "lexus_overland_F2F2EE_n", "car": "lexus", "carName": "لكزس LX700h", "preset": "overland", "paint": "F2F2EE", "night": 1, "name": "أوفرلاند أبيض", "en": "LX700h OVERLAND · WHITE · NIGHT", "tyre": "at", "acc": ["bullbar", "snorkel", "rack", "tent", "awning", "boards", "spare", "jerry", "lightbar", "steps", "worklight"], "kg": 366.2, "dh": 5.3, "reach": 325, "wading": 0.95, "lumens": 32400, "cda": 0.31}, {"id": "gmc_rally_F2F2EE_d", "car": "gmc", "carName": "جي ام سي سييرا AT4X", "preset": "rally", "paint": "F2F2EE", "night": 0, "name": "رالي صحراوي أبيض", "en": "SIERRA AT4X DESERT RALLY · WHITE", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 2.4, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "raptor_camp_F2F2EE_d", "car": "raptor", "carName": "فورد رابتر R", "preset": "camp", "paint": "F2F2EE", "night": 0, "name": "تخييم أبيض", "en": "RAPTOR R WEEKEND CAMP · WHITE", "tyre": "ht", "acc": ["rack", "tent", "awning", "worklight", "jerry", "tools", "spare"], "kg": 216.3, "dh": 6.2, "reach": 200, "wading": 0.7, "lumens": 4400, "cda": 0.25}, {"id": "lcgr_rally_F2F2EE_d", "car": "lcgr", "carName": "لاندكروزر GR", "preset": "rally", "paint": "F2F2EE", "night": 0, "name": "رالي صحراوي أبيض", "en": "LC300 GR SPORT DESERT RALLY · WHITE", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 2.2, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "hummer_rally_C2B280_n", "car": "hummer", "carName": "همر EV", "preset": "rally", "paint": "C2B280", "night": 1, "name": "رالي صحراوي رملي", "en": "HUMMER EV DESERT RALLY · SAND · NIGHT", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 1.4, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "defender_overland_F2F2EE_n", "car": "defender", "carName": "ديفندر 130", "preset": "overland", "paint": "F2F2EE", "night": 1, "name": "أوفرلاند أبيض", "en": "DEFENDER 130 OVERLAND · WHITE · NIGHT", "tyre": "at", "acc": ["bullbar", "snorkel", "rack", "tent", "awning", "boards", "spare", "jerry", "lightbar", "steps", "worklight"], "kg": 366.2, "dh": 5.7, "reach": 325, "wading": 0.95, "lumens": 32400, "cda": 0.31}, {"id": "lexus_rally_C2B280_d", "car": "lexus", "carName": "لكزس LX700h", "preset": "rally", "paint": "C2B280", "night": 0, "name": "رالي صحراوي رملي", "en": "LX700h DESERT RALLY · SAND", "tyre": "at", "acc": ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "kg": 265.2, "dh": 2.1, "reach": 492, "wading": 0.7, "lumens": 41600, "cda": 0.223}, {"id": "lexus_rock_1A1A1A_n", "car": "lexus", "carName": "لكزس LX700h", "preset": "rock", "paint": "1A1A1A", "night": 1, "name": "تحدي صخور أسود", "en": "LX700h ROCK CRAWLER · BLACK · NIGHT", "tyre": "mt", "acc": ["bullbar", "rearbar", "skid", "steps", "flares", "rocklights", "hilift", "boards", "rack", "snorkel"], "kg": 322.0, "dh": 0.4, "reach": 200, "wading": 0.95, "lumens": 11200, "cda": 0.121}];/*/BUILDS*/
+const CARINFO = {
+  lexus: { make: "Lexus", model: "LX700h", year: 2025, kind: "Full-size SUV · hybrid V6", length: 5.10, wheelbase: 2.85, blurb: "Lexus's flagship body-on-frame SUV, built on the same ladder frame as the Land Cruiser 300.", name: "لكزس LX700h", en: "2025 Lexus LX700h", file: "2025_lexus_lx700h", type: "suv", credit: "Ddiaz Design · CC BY-NC-SA 4.0", body: { wheelR: .40, bodyBottom: .36, bodyHeight: 1.42, track: 1.62, M0: 2600 } },
+  gmc: { make: "GMC", model: "Sierra 1500 AT4X", year: 2024, kind: "Full-size pickup · 6.2 V8", length: 5.89, wheelbase: 3.72, blurb: "The off-road flagship of the Sierra range: crew cab, locking diffs front and rear, and long-travel dampers.", name: "جي ام سي سييرا AT4X", en: "2024 GMC Sierra 1500 AT4X", file: "2024_gmc_sierra_1500_at4x", type: "pickup", credit: "Ddiaz Design · CC BY-NC-SA 4.0", body: { wheelR: .43, bodyBottom: .45, bodyHeight: 1.65, track: 1.73, M0: 2650 } },
+  raptor: { make: "Ford", model: "F-150 Raptor R", year: 2024, kind: "Desert pickup · supercharged 5.2 V8", length: 5.91, wheelbase: 3.68, blurb: "The fastest F-150: a high-speed desert runner on 37-inch tyres with long-travel suspension.", name: "فورد رابتر R", en: "2024 Ford F-150 Raptor R", file: "2024_ford_f_150_raptor_r", type: "pickup", credit: "007 · CC BY 4.0", body: { wheelR: .45, bodyBottom: .50, bodyHeight: 1.60, track: 1.85, M0: 2680 } },
+  lcgr: { make: "Toyota", model: "Land Cruiser 300 GR Sport", year: 2022, kind: "Full-size SUV · twin-turbo V6", length: 4.97, wheelbase: 2.85, blurb: "The sportiest Land Cruiser 300: GR styling, electronic sway bars (E-KDSS) and locking diffs front and rear.", name: "لاندكروزر GR سبورت", en: "Toyota Land Cruiser 300 GR Sport", file: "toyota_land_cruiser_gr_sport", type: "suv", credit: "Nieve5677 · CC BY 4.0", body: { wheelR: .41, bodyBottom: .40, bodyHeight: 1.55, track: 1.64, M0: 2630 } },
+  hummer: { make: "GMC", model: "Hummer EV SUV", year: 2024, kind: "Electric SUV · three motors", length: 5.00, wheelbase: 3.21, blurb: "A 4-tonne electric off-roader with rear-wheel steering, CrabWalk and adaptive air suspension.", name: "همر EV", en: "2024 GMC Hummer EV SUV", file: "2024_gmc_hummer_ev_suv", type: "suv", credit: "Ddiaz Design · CC BY-NC-SA 4.0", body: { wheelR: .45, bodyBottom: .45, bodyHeight: 1.45, track: 1.75, M0: 4110 } },
+  defender: { make: "Land Rover", model: "Defender 130 Outbound", year: 2024, kind: "Full-size SUV · mild-hybrid I6", length: 5.36, wheelbase: 3.02, blurb: "The longest Defender, Outbound spec: two rows, a huge load bay, air suspension and Terrain Response.", name: "ديفندر 130", en: "2024 Land Rover Defender 130 Outbound", file: "", type: "suv", credit: "geyges · Sketchfab Standard licence", noDownload: true, body: { wheelR: .41, bodyBottom: .42, bodyHeight: 1.55, track: 1.70, M0: 2650 } },
+};
+const CAR_KEYS = Object.keys(CARINFO).filter(k => BUILDS.some(b => b.car === k));
+const carFile = k => CARINFO[k].file ? CARS.find(c => c.id === CARINFO[k].file) : null;
+const keyOfFile = id => Object.keys(CARINFO).find(k => CARINFO[k].file === id);
+const plain = s => String(s || "").replace(/\s*\(.*?\)/g, "").trim();
+const PARTS = CAT.parts || [], CATS = CAT.categories || [], TYRES = CAT.tyres || [];
+const catName = id => (CATS.find(c => c.id === id) || {}).name || "";
+const CAT_EN = { protection: "ARMOUR", recovery: "RECOVERY", lighting: "LIGHTING", roof: "ROOF & CAMP", touring: "TOURING" };
+const candela = (lm, beam) => lm * PH.optic_efficiency / (2 * Math.PI * (1 - Math.cos(Math.max(beam, 1) * Math.PI / 360)));
+const smooth = t => t * t * (3 - 2 * t);
+const kg = m => (m % 1 ? m.toFixed(1) : m) + " كغم";
+
+/* =====================================================================================
+   1. THE SHELF: tapes on an arc that recedes into depth; the centre one turns to face you
+   ===================================================================================== */
+(function shelf() {
+  // real published cars first, then ready-made builds of the car we render (one model, many set-ups)
+  // one tape per real car: the spine carries the maker, the cover the model (all in English)
+  const ITEMS = CAR_KEYS.map(k => { const c = CARINFO[k], cov = BUILDS.find(b => b.car === k && b.preset === "stock" && !b.night) || BUILDS.find(b => b.car === k);
+    return { kind: "car", k, c, f: carFile(k), name: c.make + " " + c.model, en: c.year + " · " + c.kind, img: `img/builds/${cov.id}.webp`, tag: String(c.year), len: c.length,
+      meta: c.length.toFixed(2) + " m · " + c.credit }; });
+  const sec = $("#top"), shelfEl = $("#shelf"), stage = $("#stage"), N = ITEMS.length;
+  if (!N) { sec.style.display = "none"; return; }
+  const COPIES = N < 8 ? 6 : 3, TOTAL = N * COPIES, P = 1400;
+  let H = 300, ws = 50, d = 210, gap = 10, U = 390, W = innerWidth, XS = [], cy = 0;
+  const start = 0;
+  let T = start + N, s = RM ? T : T - 5, drag = null, dragged = false, tiltX = 0, tiltY = 0, mx = -1, my = -1, hover = -1, lastT = 0, active = -1, detailOpen = false;
+  const tapes = [], lift = new Float32Array(TOTAL);
+
+  for (let v = 0; v < TOTAL; v++) {
+    const p = ITEMS[v % N], el = document.createElement("div");
+    el.className = "tape"; el.dataset.v = v;
+    const img = esc(p.img);
+    el.innerHTML = `<div class="face sp"><div class="sp-img" style="background-image:url(${img})"></div><div class="sp-band"></div><div class="sp-name">${esc(p.c.make.toUpperCase())}</div><div class="sp-kg">${esc(p.tag)}</div></div>
+      <div class="face cv" style="background-image:url(${img})"><div class="cv-top"><span>${esc(p.c.make.toUpperCase())}</span><i>${esc(p.tag)}</i></div><div class="cv-bot"><b>${esc(p.c.model)}</b><span>${esc(p.c.year + " " + p.c.make)}</span></div></div>`;
+    stage.appendChild(el);
+    tapes.push({ el, sp: el.firstElementChild, cv: el.lastElementChild, shown: true });
+  }
+  ITEMS.forEach(p => { const im = new Image(); im.src = p.img; });
+
+  function measure() {
+    W = sec.clientWidth; const SH = sec.clientHeight, phone = W < 768;
+    H = Math.round(phone ? Math.min(W * .52, SH * .3) : Math.min(SH * .43, W * .25));
+    ws = H * 142 / 840; d = H * 1.25; gap = H * .035; U = H * (phone ? 1.05 : 1.3);
+    sec.style.setProperty("--H", H + "px"); sec.style.setProperty("--ws", ws + "px"); sec.style.setProperty("--d", d + "px");
+    XS = [0]; let acc = 0;
+    for (let u = 0; u < 3 * U; u += 2) { acc += 2 / (1 + Math.pow(u / U, 1.6)); XS.push(acc); }
+    const r = shelfEl.getBoundingClientRect(); cy = r.top + r.height / 2;
+  }
+  const rel = (v, s) => { let r = ((v - s) % TOTAL + TOTAL) % TOTAL; if (r >= TOTAL / 2) r -= TOTAL; return r; };
+  const B = r => Math.abs(r) < 1 ? (r + Math.sin(Math.PI * r) / Math.PI) / 2 : Math.sign(r) * .5;
+  const F = r => r * (ws + gap) + (d - ws + 1.4 * gap) * B(r);
+  const scl = u => 1 / (1 + Math.pow(Math.abs(u) / U, 1.6));
+  const xsc = u => { const a = Math.abs(u) / 2, i = Math.min(XS.length - 2, Math.floor(a)); return Math.sign(u) * (XS[i] + (XS[i + 1] - XS[i]) * (a - i)); };
+
+  // caption: mask slide
+  const capEls = [$("#capTitle"), $("#capSub"), $("#capMeta")];
+  function setCaption(i, dir) {
+    const p = ITEMS[i], txt = [p.name, p.en, p.meta];
+    $("#htA").textContent = p.c.make.toUpperCase(); $("#htB").textContent = p.c.year;
+    capEls.forEach((m, k) => {
+      const old = [...m.children], nu = document.createElement("span"); nu.textContent = txt[k]; m.appendChild(nu);
+      if (RM || dir === 0) { old.forEach(o => o.remove()); return; }
+      const opt = { duration: 650, easing: "cubic-bezier(.2,.8,.2,1)", fill: "both" };
+      nu.animate([{ transform: `translateY(${dir * 105}%)` }, { transform: "translateY(0)" }], opt);
+      old.forEach(o => { const a = o.animate([{ transform: getComputedStyle(o).transform === "none" ? "translateY(0)" : getComputedStyle(o).transform }, { transform: `translateY(${-dir * 105}%)` }], opt); a.onfinish = () => o.remove(); });
+    });
+  }
+
+  // ruler: overall length of the car, 4.0..6.5 m
+  const ruler = $("#ruler"), dot = $("#rDot"), R0 = 4.0, R1 = 6.5, MAXKG = R1 - R0; let dotKg = ITEMS[start].len - R0;
+  for (let k = 0; k <= 25; k++) {
+    const i = document.createElement("i"); i.style.left = k / 25 * 100 + "%"; if (k % 5 === 0) i.className = "maj"; ruler.appendChild(i);
+    if (k % 5 === 0) { const e = document.createElement("em"); e.style.left = k / 25 * 100 + "%"; e.textContent = (R0 + k / 10).toFixed(1); ruler.appendChild(e); }
+  }
+  ruler.addEventListener("click", e => {
+    const r = ruler.getBoundingClientRect(), want = (e.clientX - r.left) / r.width * MAXKG;
+    let best = 0, bd = 1e9; ITEMS.forEach((p, i) => { const dd = Math.abs(p.len - R0 - want); if (dd < bd) { bd = dd; best = i; } });
+    const cur = ((Math.round(T) % N) + N) % N; let dlt = best - cur; if (dlt > N / 2) dlt -= N; if (dlt < -N / 2) dlt += N;
+    T = Math.round(T) + dlt;
+  });
+
+  const ring = $("#ring"), cursor = $("#cursor");
+  let cxp = 0, cyp = 0, fine = matchMedia("(pointer:fine)").matches && !RM;
+  if (fine) sec.classList.add("fine");
+
+  function frame(t) {
+    const dt = Math.min(.05, (t - lastT) / 1000 || 0); lastT = t;
+    const k = drag && dragged ? 18 : 5.2;
+    s = RM ? T : s + (T - s) * (1 - Math.exp(-k * dt));
+    if (Math.abs(s) > 4 * TOTAL) { const sh = Math.trunc(s / TOTAL) * TOTAL; s -= sh; T -= sh; }
+    const a = ((Math.round(s) % N) + N) % N;
+    if (a !== active) { setCaption(a, active < 0 ? 0 : Math.sign(T - s) || 1); active = a; }
+    // ruler dot: mass between the two neighbours
+    const f0 = Math.floor(s), fr = s - f0, m0 = ITEMS[((f0 % N) + N) % N].len - R0, m1 = ITEMS[(((f0 + 1) % N) + N) % N].len - R0;
+    const want = m0 + (m1 - m0) * smooth(fr);
+    dotKg = RM ? want : dotKg + (want - dotKg) * (1 - Math.exp(-14 * dt));
+    dot.style.left = Math.min(100, dotKg / MAXKG * 100) + "%";
+    // cover tilt
+    const settled = Math.abs(T - s) < .3 && !detailOpen;
+    const onCover = settled && mx >= 0 && Math.abs(mx - W / 2) < .55 * d && Math.abs(my - cy) < .55 * H;
+    const wantY = mx < 0 ? 0 : onCover ? (mx - W / 2) / (.55 * d) * 8 : (mx - W / 2) / W * 4, wantX = onCover ? -(my - cy) / (H / 2) * 5 : 0;
+    const e7 = RM ? 1 : 1 - Math.exp(-7 * dt); tiltY += (wantY - tiltY) * e7; tiltX += (wantX - tiltX) * e7;
+    for (let v = 0; v < TOTAL; v++) {
+      const tp = tapes[v], r = rel(v, s), u = F(r);
+      if (Math.abs(u) > U * 1.95) { if (tp.shown) { tp.el.style.display = "none"; tp.shown = false; } continue; }
+      if (!tp.shown) { tp.el.style.display = ""; tp.shown = true; }
+      const o = smooth(Math.max(0, 1 - Math.abs(r))), sc = scl(u), kk = 1 / sc;
+      const wl = hover === v && Math.abs(r) > .5 ? 1 : 0; lift[v] += (wl - lift[v]) * (RM ? 1 : 1 - Math.exp(-12 * dt));
+      const z = P * (1 - kk) + o * H * .1, x = xsc(u) * kk, y = (H * .5 * (1 - sc) * .42 + o * H * .012 - lift[v] * H * .05) * kk;
+      const ry = Math.sign(u) * Math.min(1, Math.abs(u) / U) * 26 * (1 - o) - 90 * o + tiltY * o, rx = tiltX * o;
+      tp.el.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,${z.toFixed(2)}px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+      tp.el.style.zIndex = Math.round(3000 + z);
+      tp.sp.style.setProperty("--shade", Math.min(.6, o * .55 + (1 - sc) * .32).toFixed(3));
+      tp.cv.style.setProperty("--shade", ((1 - o) * .82).toFixed(3));
+    }
+    const rs = detailOpen ? 0 : smooth(Math.max(0, 1 - Math.abs(T - s) * 3));
+    const sr = sec.getBoundingClientRect();
+    ring.style.left = (W / 2 - d / 2 - 6) + "px"; ring.style.top = (cy - sr.top + .36 * H) + "px"; ring.style.transform = `scale(${rs.toFixed(3)})`;
+    if (fine) {
+      const e = 1 - Math.exp(-16 * dt); cxp += (mx - cxp) * e; cyp += (my - cyp) * e;
+      cursor.style.transform = `translate(${cxp.toFixed(1)}px,${cyp.toFixed(1)}px)`;
+      cursor.classList.toggle("open", onCover);
+    }
+    shelfEl.classList.toggle("hot", onCover);
+    requestAnimationFrame(frame);
+  }
+
+  // inputs
+  const tapeAt = el => { const t = el && el.closest && el.closest(".tape"); return t ? +t.dataset.v : -1; };
+  sec.addEventListener("pointermove", e => {
+    mx = e.clientX; my = e.clientY; hover = tapeAt(e.target);
+    if (fine) { cursor.classList.add("on"); cursor.classList.toggle("spine", hover >= 0); cursor.classList.toggle("btnc", !!e.target.closest(".arrow,.ruler,a,button")); }
+    if (drag) { const dx = e.clientX - drag.x; if (Math.abs(dx) > 5) dragged = true; if (dragged) T = drag.T - dx / (ws + gap); }
+  });
+  sec.addEventListener("pointerleave", () => { mx = -1; hover = -1; cursor.classList.remove("on"); });
+  shelfEl.addEventListener("pointerdown", e => { if (e.button) return; drag = { x: e.clientX, T }; dragged = false; });
+  addEventListener("pointerup", () => { if (drag) { if (dragged) T = Math.round(T); drag = null; setTimeout(() => dragged = false, 0); } });
+  // the open cover is hit-tested by its rectangle: browsers lose 3D hit-testing when its parent is edge-on
+  const onOpenCover = (x, y) => { if (Math.abs(T - s) > .5) return false; const r = coverRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; };
+  shelfEl.addEventListener("click", e => {
+    if (dragged) return; if (onOpenCover(e.clientX, e.clientY)) { openDetail(); return; }
+    const v = tapeAt(e.target); if (v < 0) return;
+    const r = rel(v, s); if (Math.abs(r) < .5) openDetail(); else T = Math.round(s + r);
+  });
+  shelfEl.addEventListener("wheel", e => {
+    if (detailOpen || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;       // vertical wheel still scrolls the page
+    e.preventDefault(); T += e.deltaX / (ws + gap) * .5; clearTimeout(shelfEl._w); shelfEl._w = setTimeout(() => T = Math.round(T), 160);
+  }, { passive: false });
+  $("#arrL").onclick = () => T = Math.round(T) - 1; $("#arrR").onclick = () => T = Math.round(T) + 1;
+  addEventListener("keydown", e => {
+    if (detailOpen) { if (e.key === "Escape") closeDetail(); return; }
+    const r = sec.getBoundingClientRect(); if (r.bottom < 120 || r.top > innerHeight - 120 || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+    if (e.key === "ArrowLeft") T = Math.round(T) - 1; else if (e.key === "ArrowRight") T = Math.round(T) + 1;
+    else if (e.key === "Enter" && document.activeElement === document.body) openDetail();
+  });
+  addEventListener("resize", measure); addEventListener("scroll", () => { const r = shelfEl.getBoundingClientRect(); cy = r.top + r.height / 2; }, { passive: true });
+
+  /* ---- detail sheet: a sheet of paper grows out of the cover; the poster bleeds in like ink */
+  const detail = $("#detail"), blotG = $("#blotG");
+  const BLOTS = [[320, 300, 0], [700, 520, 120], [520, 120, 220], [150, 640, 300], [860, 220, 360], [520, 740, 420], [480, 420, 180]];
+  blotG.innerHTML = BLOTS.map(b => `<circle cx="${b[0]}" cy="${b[1]}" r="0"/>`).join("");
+  let anims = [], inkT0 = 0, inkRaf = 0, curPart = null;
+  const coverRect = () => tapes.find((tp, v) => Math.abs(rel(v, s)) <= .5).cv.getBoundingClientRect();
+  const inset = r => `inset(${Math.max(0, r.top)}px ${Math.max(0, innerWidth - r.right)}px ${Math.max(0, innerHeight - r.bottom)}px ${Math.max(0, r.left)}px round 3px)`;
+  function ink(t) {
+    const el = t - inkT0; let busy = false;
+    [...blotG.children].forEach((c, i) => { const a = Math.min(1, Math.max(0, (el - 520 - BLOTS[i][2]) / 1250)); c.setAttribute("r", (1150 * (1 - Math.pow(1 - a, 3))).toFixed(1)); if (a < 1) busy = true; });
+    if (busy) inkRaf = requestAnimationFrame(ink);
+  }
+  function openDetail() {
+    if (detailOpen) return; T = Math.round(T); const p = ITEMS[((T % N) + N) % N]; curPart = p; detailOpen = true;
+    $("#dSub").textContent = p.en;
+    $("#dTitle").textContent = p.name;
+    const c = p.c, f = p.f;
+    $("#dSub").textContent = c.make.toUpperCase() + " · " + c.year;
+    $("#dTitle").textContent = c.model;
+    $("#dMeta").textContent = c.year + " " + c.make + " " + c.model;
+    $("#dDesc").textContent = c.blurb;
+    const sp = [["Make", c.make], ["Model", c.model], ["Year", c.year], ["Type", c.kind], ["Length", c.length.toFixed(2) + " m"], ["Wheelbase", c.wheelbase.toFixed(2) + " m"]];
+    if (f) sp.push(["File", mb(f.size)]);
+    $("#dBasis").textContent = "3D model: " + c.credit + (c.noDownload ? " — display only: this licence does not allow sharing the file. Build it yourself in OTH Car Studio from the original model." : "");
+    $("#dGo").textContent = "Try it in the configurator →"; $("#dGo").hidden = false;
+    $("#dDl").hidden = !f; if (f) { $("#dDl").href = f.url; $("#dDl").textContent = "Download .othcar"; }
+    $("#dSpecs").innerHTML = sp.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
+    $("#dImg").setAttribute("href", p.img);
+    [...blotG.children].forEach(c => c.setAttribute("r", RM ? 1150 : 0));
+    detail.classList.add("on"); detail.scrollTop = 0; document.documentElement.style.overflow = "hidden";
+    cursor.classList.remove("on");
+    anims.forEach(a => a.cancel()); anims = [];
+    if (!RM) {
+      anims.push(detail.animate([{ clipPath: inset(coverRect()) }, { clipPath: "inset(0px 0px 0px 0px round 0px)" }], { duration: 1050, easing: "cubic-bezier(.76,0,.18,1)", fill: "both" }));
+      $$(".dm > *").forEach((el, k) => anims.push(el.animate([{ transform: "translateY(110%)" }, { transform: "translateY(0)" }], { duration: 900, delay: 620 + k * 75, easing: "cubic-bezier(.2,.8,.2,1)", fill: "both" })));
+      inkT0 = performance.now(); cancelAnimationFrame(inkRaf); inkRaf = requestAnimationFrame(ink);
+    }
+    $("#dClose").focus({ preventScroll: true });
+  }
+  function closeDetail() {
+    if (!detailOpen) return;
+    const done = () => { detail.classList.remove("on"); anims.forEach(a => a.cancel()); anims = []; detailOpen = false; document.documentElement.style.overflow = ""; };
+    if (RM) return done();
+    detail.scrollTop = 0;
+    const a = detail.animate([{ clipPath: "inset(0px 0px 0px 0px round 0px)" }, { clipPath: inset(coverRect()) }], { duration: 850, easing: "cubic-bezier(.76,0,.18,1)", fill: "both" });
+    anims.push(a); a.onfinish = done;
+  }
+  $("#dClose").onclick = closeDetail; ring.onclick = openDetail;
+  $("#dGo").onclick = () => {
+    const p = curPart;
+    const b = BUILDS.find(x => x.car === p.k && x.preset === "stock" && !x.night) || BUILDS.find(x => x.car === p.k);
+    closeDetail(); setTimeout(() => { window.CFG && window.CFG.load({ ...b, night: 0 }); $("#build").scrollIntoView({ behavior: RM ? "auto" : "smooth" }); }, RM ? 0 : 500);
+  };
+
+  measure(); requestAnimationFrame(t => { lastT = t; frame(t); });
+})();
+
+/* =====================================================================================
+   2. CONFIGURATOR: real renders of the car, one transparent layer per part; lamps add light
+   ===================================================================================== */
+(function configurator() {
+  if (!PARTS.length) { $("#build").style.display = "none"; return; }
+  const cv = $("#cv"), ctx = cv.getContext("2d"), viewer = $("#viewer"), CW = 1600, CH = 1000;
+  const PAINTS = [["C2B280", "رملي"], ["F2F2EE", "أبيض"], ["D9541E", "برتقالي"], ["2F5D3A", "زيتوني"], ["1A1A1A", "أسود"]];
+  // far-to-near draw order for each camera
+  const Z_DAY = ["skid", "rocklights", "mudflaps", "rearbar", "hilift", "jerry", "spare", "worklight", "steps", "flares", "rack", "roofbox", "tent", "awning", "boards", "tools", "lightbar", "snorkel", "pods", "bullbar", "fogs", "antenna"];
+  const Z_NIGHT = ["skid", "rocklights", "bullbar", "fogs", "antenna", "pods", "snorkel", "lightbar", "mudflaps", "steps", "flares", "rack", "roofbox", "tent", "awning", "boards", "tools", "worklight", "rearbar", "spare", "jerry", "hilift"];
+  const PRESETS = [
+    ["stock", "ستوك", [], "at"],
+    ["overland", "أوفرلاند", ["bullbar", "snorkel", "rack", "tent", "awning", "boards", "spare", "jerry", "lightbar", "steps", "worklight"], "at"],
+    ["rally", "رالي صحراوي", ["bullbar", "lightbar", "pods", "fogs", "skid", "rack", "roofbox", "spare", "mudflaps", "antenna"], "at"],
+    ["rock", "تحدي صخور", ["bullbar", "rearbar", "skid", "steps", "flares", "rocklights", "hilift", "boards", "rack", "snorkel"], "mt"],
+    ["camp", "تخييم", ["rack", "tent", "awning", "worklight", "jerry", "tools", "spare"], "ht"],
+  ];
+  const st = { car: CAR_KEYS[0] || "lexus", acc: new Set(PRESETS[1][2]), tyre: "at", paint: PAINTS[0][0], night: false, preset: "overland" };
+  const imgs = new Map(); let pending = 0;
+  const load = src => {
+    if (imgs.has(src)) return imgs.get(src);
+    const o = { img: new Image(), ok: false }; pending++; $("#vLoad").classList.add("on");
+    o.img.onload = () => { o.ok = true; done(); }; o.img.onerror = done;
+    function done() { pending--; if (!pending) $("#vLoad").classList.remove("on"); dirty = true; }
+    o.img.src = src; imgs.set(src, o); return o;
+  };
+  // every layer eases in (alpha + a small drop) when its part is switched on
+  const anim = new Map(); let dirty = true, fade = 1, fadeFrom = null;
+  const part = id => PARTS.find(p => p.id === id);
+  function draw() {
+    const now = performance.now(); let busy = false;
+    ctx.clearRect(0, 0, CW, CH);
+    const base = load(st.night ? `cfg/${st.car}/night_${st.paint}.jpg` : `cfg/${st.car}/day_${st.paint}.webp`);
+    if (base.ok) ctx.drawImage(base.img, 0, 0, CW, CH);
+    if (st.night && base.ok) {
+      ctx.globalCompositeOperation = "screen";
+      for (const id of ["stock", ...PARTS.filter(p => p.light && st.acc.has(p.id)).map(p => p.id)]) {
+        const L = load(`cfg/${st.car}/light_${id}.jpg`); if (!L.ok) continue;
+        const a = id === "stock" ? 1 : ease(id, now); if (a < 1) busy = true;
+        ctx.globalAlpha = a; ctx.drawImage(L.img, 0, 0, CW, CH);
+      }
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    }
+    if (base.ok) for (const id of (st.night ? Z_NIGHT : Z_DAY)) {
+      if (!st.acc.has(id)) continue;
+      const L = load(`cfg/${st.car}/${st.night ? "npart" : "part"}_${id}.webp`); if (!L.ok) continue;
+      const a = ease(id, now); if (a < 1) busy = true;
+      ctx.globalAlpha = a; ctx.drawImage(L.img, 0, -(1 - a) * 26, CW, CH);
+    }
+    ctx.globalAlpha = 1;
+    if (fadeFrom) {           // day <-> night and paint changes dissolve
+      fade = Math.min(1, fade + 0.06); ctx.globalAlpha = 1 - smooth(fade); ctx.drawImage(fadeFrom, 0, 0); ctx.globalAlpha = 1;
+      if (fade >= 1) fadeFrom = null; else busy = true;
+    }
+    dirty = busy;
+  }
+  function ease(id, now) { const t0 = anim.get(id); if (t0 == null || RM) return 1; const a = Math.min(1, (now - t0) / 420); if (a >= 1) anim.delete(id); return 1 - Math.pow(1 - a, 3); }
+  function snapshot() { if (RM) return; const c = document.createElement("canvas"); c.width = CW; c.height = CH; c.getContext("2d").drawImage(cv, 0, 0); fadeFrom = c; fade = 0; }
+  (function loop() { if (dirty) draw(); requestAnimationFrame(loop); })();
+
+  // ---- same maths as the game mod and the app Studio (parts/effects.js)
+  function effects() {
+    const BASE = { ...CARINFO[st.car].body }; BASE.h0 = BASE.bodyBottom + .32 * BASE.bodyHeight;
+    const parts = PARTS.filter(p => st.acc.has(p.id)), tyre = TYRES.find(t => t.id === st.tyre) || { grip: 1, crr: PH.crr_base || .012, mass_kg: 0 };
+    const tyreMass = 4 * (tyre.mass_kg || 0), partsMass = parts.reduce((a, p) => a + p.mass_kg, 0), M = BASE.M0 + partsMass + tyreMass;
+    let mom = BASE.M0 * BASE.h0; for (const p of parts) mom += p.mass_kg * (BASE.bodyBottom + (p.pos ? p.pos.y : .5) * BASE.bodyHeight);
+    mom += tyreMass * BASE.wheelR; const h = mom / M;
+    const ssf0 = BASE.track / (2 * BASE.h0), ssf = BASE.track / (2 * h);
+    const cda = parts.reduce((a, p) => a + (p.cda_m2 || 0), 0), v = 100 / 3.6, dragN = .5 * PH.air_density * cda * v * v;
+    const rollN = ((tyre.crr || .012) - (PH.crr_base || .012)) * M * (PH.gravity || 9.81);
+    let lumens = 0, reach = 0; for (const p of parts) if (p.light) { lumens += p.light.lumens; if ((p.light.dir || "front") === "front") reach = Math.max(reach, Math.sqrt(candela(p.light.lumens, p.light.beam_deg))); }
+    const stock = Math.sqrt(PH.stock_high_beam_cd), wading = PH.stock_wading_m + parts.reduce((a, p) => a + (p.wading_m || 0), 0);
+    return { n: parts.length, add: partsMass + tyreMass, dh: (h - BASE.h0) * 100, ssf, ssfPct: (ssf / ssf0 - 1) * 100, dragN, cda, rollN, lumens, reach: Math.max(reach, stock), stock, wading, grip: ((tyre.grip || 1) - 1) * 100 };
+  }
+  // numbers tween to their new value
+  const shown = {};
+  function tween(key, to, fmt, el) {
+    const from = shown[key] ?? to, t0 = performance.now(); shown[key] = to;
+    if (RM || from === to) { el.textContent = fmt(to); return; }
+    (function step(t) { const a = Math.min(1, (t - t0) / 600), e = 1 - Math.pow(1 - a, 3); el.textContent = fmt(from + (to - from) * e); if (a < 1 && shown[key] === to) requestAnimationFrame(step); })(t0);
+  }
+  const sg = (x, dgt = 0) => (x > 1e-6 ? "+" : x < -1e-6 ? "−" : "") + Math.abs(x).toFixed(dgt);
+  const ROWS = [
+    ["add", "الوزن المضاف", e => e.n + " قطعة", x => sg(x) + " كغم", e => e.add > .5 ? "bad" : ""],
+    ["dh", "مركز الثقل", () => "أعلى = تميل أكثر بالمنعطفات", x => sg(x, 1) + " سم", e => e.dh > .05 ? "bad" : e.dh < -.05 ? "good" : ""],
+    ["ssfPct", "ثبات ضد الانقلاب", e => e.ssf.toFixed(2) + " g", x => sg(x, 1) + "%", e => e.ssfPct < -.05 ? "bad" : e.ssfPct > .05 ? "good" : ""],
+    ["dragN", "سحب الهوا على 100 كم/س", e => "مساحة سحب " + sg(e.cda, 3) + " م²", x => sg(x) + " نيوتن", e => e.dragN > .5 ? "bad" : ""],
+    ["wading", "عمق الخوض بالماي", () => "", x => x.toFixed(2) + " م", e => e.wading > PH.stock_wading_m + .001 ? "good" : ""],
+    ["grip", "تماسك التاير", () => (TYRES.find(t => t.id === st.tyre) || {}).name || "", x => sg(x) + "%", e => e.grip > .01 ? "good" : e.grip < -.01 ? "bad" : ""],
+    ["rollN", "مقاومة الدوران", () => "قوة تسحب السيارة لورا طول الوقت", x => sg(x) + " نيوتن", e => e.rollN > .5 ? "bad" : e.rollN < -.5 ? "good" : ""],
+  ];
+  $("#fx").innerHTML = ROWS.map(r => `<div class="fxr" data-k="${r[0]}"><div><span>${r[1]}</span><small></small></div><b class="num"></b></div>`).join("");
+  function renderFx() {
+    const e = effects();
+    for (const r of ROWS) { const row = $(`.fxr[data-k=${r[0]}]`); row.className = "fxr " + r[4](e); row.querySelector("small").textContent = r[2](e); tween(r[0], e[r[0]], r[3], row.querySelector("b")); }
+    tween("reach", e.reach, x => Math.round(x) + " m", $("#reachN"));
+    $("#reachCu").style.width = Math.min(100, e.reach / 600 * 100) + "%"; $("#reachSt").style.width = e.stock / 600 * 100 + "%";
+    $("#ptCount").textContent = e.n ? e.n + " مركّبة" : "";
+  }
+  // ---- controls
+  $("#carPick").innerHTML = CAR_KEYS.map(k => `<button class="chipb" data-car="${k}"><bdi>${esc(CARINFO[k].make + " " + CARINFO[k].model)}</bdi></button>`).join("");
+  $("#carPick").addEventListener("click", e => { const b = e.target.closest(".chipb"); if (!b || b.dataset.car === st.car) return; snapshot(); st.car = b.dataset.car; sync(); });
+  $("#presets").innerHTML = PRESETS.map(p => `<button class="chipb" data-p="${p[0]}">${p[1]}</button>`).join("");
+  $("#ptList").innerHTML = CATS.map(c => `<div class="catrow"><span>${esc(c.name)}</span><div class="parts">${PARTS.filter(p => p.cat === c.id).map(p => `<button class="pt" data-id="${p.id}" aria-pressed="false" title="${esc(p.name_en || "")}">${esc(p.name)}<small>${p.mass_kg} kg</small></button>`).join("")}</div></div>`).join("");
+  $("#tyres").innerHTML = TYRES.map(t => `<button data-t="${t.id}" title="${esc(t.note || "")}">${esc(t.name)}</button>`).join("");
+  $("#swatches").innerHTML = PAINTS.map(p => `<button class="sw" data-c="${p[0]}" style="background:#${p[0]}" title="${p[1]}" aria-label="${p[1]}"></button>`).join("");
+  function sync() {
+    $$(".pt").forEach(b => { const on = st.acc.has(b.dataset.id); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+    $$("#presets .chipb").forEach(b => b.classList.toggle("on", b.dataset.p === st.preset));
+    $$("#tyres button").forEach(b => b.classList.toggle("on", b.dataset.t === st.tyre));
+    $$(".sw").forEach(b => b.classList.toggle("on", b.dataset.c === st.paint));
+    $$("#carPick .chipb").forEach(b => b.classList.toggle("on", b.dataset.car === st.car)); $("#vCredit").textContent = CARINFO[st.car].en + " · " + CARINFO[st.car].credit;
+    $("#bDay").classList.toggle("on", !st.night); $("#bNight").classList.toggle("on", st.night); viewer.classList.toggle("night", st.night);
+    renderFx(); dirty = true;
+  }
+  function add(id) {
+    const p = part(id); if (!p || st.acc.has(id)) return;
+    if (p.needs && !st.acc.has(p.needs)) add(p.needs);
+    for (const c of p.conflicts || []) st.acc.delete(c);
+    st.acc.add(id); anim.set(id, performance.now());
+  }
+  function remove(id) { st.acc.delete(id); for (const p of PARTS) if (p.needs === id && st.acc.has(p.id)) st.acc.delete(p.id); }
+  $("#ptList").addEventListener("click", e => { const b = e.target.closest(".pt"); if (!b) return; st.acc.has(b.dataset.id) ? remove(b.dataset.id) : add(b.dataset.id); st.preset = ""; sync(); });
+  $("#presets").addEventListener("click", e => { const b = e.target.closest(".chipb"); if (!b) return; const p = PRESETS.find(x => x[0] === b.dataset.p); const old = new Set(st.acc); st.acc = new Set(p[2]); st.tyre = p[3]; st.preset = p[0]; const now = performance.now(); let i = 0; for (const id of Z_DAY) if (st.acc.has(id) && !old.has(id)) anim.set(id, now + (i++) * 45); sync(); });
+  $("#tyres").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; st.tyre = b.dataset.t; st.preset = ""; sync(); });
+  $("#swatches").addEventListener("click", e => { const b = e.target.closest(".sw"); if (!b) return; snapshot(); st.paint = b.dataset.c; sync(); });
+  $("#bDay").onclick = () => { if (st.night) { snapshot(); st.night = false; sync(); } };
+  $("#bNight").onclick = () => { if (!st.night) { snapshot(); st.night = true; sync(); } };
+  window.CFG = {
+    add(id) { add(id); st.preset = ""; sync(); },
+    load(b) { snapshot(); st.car = b.car || st.car; st.acc = new Set(b.acc); st.tyre = b.tyre; st.paint = b.paint; st.night = !!b.night; st.preset = b.preset; const now = performance.now(); let i = 0; for (const id of Z_DAY) if (st.acc.has(id)) anim.set(id, now + 400 + (i++) * 60); sync(); },
+  };
+  sync();
+  // warm the cache for the first night switch once the day view is in
+  setTimeout(() => { load(`cfg/${st.car}/night_${st.paint}.jpg`); load(`cfg/${st.car}/light_stock.jpg`); }, 2500);
+})();
+
+/* =====================================================================================
+   3. cars, credits, download, reveals
+   ===================================================================================== */
+(function rest() {
+  const dl = $("#dlMain");
+  if (SITE.download) { dl.href = SITE.download; dl.textContent = "نزّل" + (SITE.version ? " v" + SITE.version : ""); } else dl.setAttribute("aria-disabled", "true");
+  const wrap = $("#carsWrap");
+  if (!CARS.length) {
+    wrap.innerHTML = `<div class="soon reveal"><img src="img/builds/lexus_overland_C2B280_d.webp" alt="" loading="lazy"><div><span class="badge warn" style="justify-self:start">قريباً</span><h3>أول السيارات على الطريق</h3><p>نجهزها ونفحص حقوق كل موديل قبل ما ننشره. كل سيارة تنزل كملف <span class="ltr">.othcar</span> واحد، ويه اسم صاحب الموديل ورخصته.</p><a class="btn small" href="#build" style="justify-self:start">جرّب المعدات هسه</a></div></div>`;
+  } else {
+    wrap.innerHTML = `<div class="bar"><button class="chip on" data-f="all">الكل</button><button class="chip" data-f="suv">SUV</button><button class="chip" data-f="pickup">بيك أب</button><input class="search" id="carSearch" placeholder="دوّر على سيارة…" aria-label="بحث بالسيارات"></div><div class="grid" id="carGrid"></div>`;
+    let f = "all", q = "";
+    const render = () => {
+      const list = CARS.filter(c => (f === "all" || c.type === f) && (!q || (c.name + " " + (c.credit?.author || "")).toLowerCase().includes(q)));
+      $("#carGrid").innerHTML = list.length ? list.map(c => { const nc = /NC/i.test(c.credit?.license || ""), k = keyOfFile(c.id), cov = k && BUILDS.find(b => b.car === k && !b.night);
+        const thumb = cov ? `img/builds/${cov.id}.webp` : c.preview;
+        return `<article class="card"><div class="thumb">${thumb ? `<img src="${esc(thumb)}" alt="" loading="lazy">` : ""}${c.credit?.license ? `<span class="badge ${nc ? "warn" : "info"}">${esc(plain(c.credit.license))}</span>` : ""}</div>
+        <div class="cbody"><h3><bdi>${esc(c.name)}</bdi></h3><div class="by">${c.credit?.author ? "موديل: " + esc(plain(c.credit.author)) : ""}</div>
+        <div class="cfoot"><a class="btn small primary" href="${esc(c.url)}">نزّل ${mb(c.size)}</a>${k ? `<button class="btn small" data-try="${k}">جرّبها</button>` : ""}${c.credit?.source ? `<a class="btn small" href="${esc(c.credit.source)}" target="_blank" rel="noopener">الأصل</a>` : ""}</div></div></article>`; }).join("")
+        : `<p class="lead">ماكو نتيجة. جرب كلمة ثانية.</p>`;
+    };
+    wrap.addEventListener("click", e => { const t = e.target.closest("[data-try]"); if (t) { const b = BUILDS.find(x => x.car === t.dataset.try && x.preset === "overland") || BUILDS.find(x => x.car === t.dataset.try); window.CFG && window.CFG.load({ ...b, night: 0 }); $("#build").scrollIntoView({ behavior: RM ? "auto" : "smooth" }); return; }
+      const ch = e.target.closest(".chip"); if (!ch) return; $$(".chip").forEach(x => x.classList.toggle("on", x === ch)); f = ch.dataset.f; render(); });
+    $("#carSearch").oninput = e => { q = e.target.value.trim().toLowerCase(); render(); };
+    render();
+  }
+  const fixed = [
+    ["Readex Pro", "خط الهوية · SIL Open Font License"], ["three.js", "الاستوديو 3D · MIT"], ["MelonLoader", "تشغيل المودات · Apache-2.0"],
+    ["Mihacappy · Alex_hears_things · overmedium · Henaway", "أصوات محركات · CC0"], ["qopsinonstudios · Keith Selmes", "أصوات محركات · CC-BY"],
+  ];
+  $("#creditList").innerHTML =
+    (CARS.length ? CARS.map(c => `<div class="cr"><b>${esc(c.name)}</b><span>${esc(plain(c.credit?.author))} · ${esc(plain(c.credit?.license))}</span></div>`).join("")
+      : CAR_KEYS.map(k => `<div class="cr"><b>${esc(CARINFO[k].en)}</b><span>${esc(CARINFO[k].credit)}</span></div>`).join("")) +
+    CUSTOM.map(p => `<div class="cr"><b>${esc(p.credit?.title || p.name_en || p.name)}</b><span>${esc(p.credit?.author || "")} · ${esc(p.credit?.license || "")}</span></div>`).join("") +
+    fixed.map(([a, b]) => `<div class="cr"><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join("");
+  // sections lift gently as they come into view (always readable)
+  const io = "IntersectionObserver" in window && !RM ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.remove("pre"); io.unobserve(e.target); } }), { threshold: .08 }) : null;
+  if (io) $$(".reveal").forEach(el => { if (el.getBoundingClientRect().top > innerHeight) { el.classList.add("pre"); io.observe(el); } });
+})();
+</script>
+</body>
+</html>

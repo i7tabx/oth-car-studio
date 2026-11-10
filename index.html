@@ -275,6 +275,68 @@ footer .wrap{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap}
 .reveal{transition:transform .8s var(--ease)}
 .reveal.pre{transform:translateY(22px)}
 @media (prefers-reduced-motion:reduce){.reveal,.reveal.pre{transform:none;transition:none}html{scroll-behavior:auto}}
+
+/* ---------- motion layer (GSAP + ScrollTrigger + Lenis when available; the page works without them) */
+html{scroll-padding-top:72px}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+.btn,.chipb,.pt,.seg3 button,.sw,.daynight button,.chip,.d-go{transition:transform 160ms cubic-bezier(.2,.8,.2,1),background-color .2s,border-color .2s,color .2s,box-shadow .2s,filter .2s}
+.btn:active,.chipb:active,.pt:active,.seg3 button:active,.chip:active,.d-go:active,.daynight button:active{transform:scale(.97)}
+.sw:active{transform:scale(.9)}
+/* cards light up where the pointer is */
+.spot{position:relative;isolation:isolate}
+.spot::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s;z-index:-1;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(255,138,42,.10),transparent 60%)}
+.spot:hover::after{opacity:1}
+.card .thumb img{transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.card:hover .thumb img{transform:scale(1.045)}
+/* word masks for headings */
+.wd{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.08em;margin-bottom:-.08em}
+.wd>span{display:inline-block;will-change:transform}
+/* brand marquee */
+.marquee{overflow:hidden;border-block:1px solid rgba(255,226,176,.07);background:#110d0b;padding-block:18px;direction:ltr;user-select:none}
+.mq-track{display:flex;width:max-content;gap:0;will-change:transform}
+.mq-track span{font:700 clamp(22px,3.2vw,40px)/1 var(--sans);letter-spacing:.12em;color:transparent;-webkit-text-stroke:1px rgba(255,190,130,.38);padding-inline:28px;white-space:nowrap}
+.mq-track span:nth-child(3n+1){color:#f6eee6;-webkit-text-stroke:0}
+.mq-track i{font-style:normal;color:var(--ember);align-self:center;font-size:18px}
+.no-gsap .mq-track{animation:mq 40s linear infinite}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* scroll story: the car gets built while you scroll */
+.story{padding:0;background:#0d0a09}
+.story-pin{height:100vh;height:100svh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);align-items:center;gap:4vw;padding:0 max(20px,4vw);position:relative;overflow:hidden}
+.story-pin::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 55% at 62% 50%,rgba(255,106,31,.10),transparent 70%);pointer-events:none;transition:opacity .6s}
+.story-steps{list-style:none;margin:0;padding:0;display:grid;gap:6px;position:relative;z-index:2}
+.story-steps li{padding:14px 18px;border-radius:16px;border:1px solid transparent;opacity:.32;transition:opacity .45s,background-color .45s,border-color .45s;cursor:pointer}
+.story-steps li.on{opacity:1;background:rgba(24,19,15,.7);border-color:var(--line)}
+.story-steps small{display:block;font-size:11.5px;font-weight:600;color:var(--ember2);letter-spacing:.12em;direction:ltr;text-align:right}
+.story-steps h3{margin:2px 0 4px;font-size:clamp(19px,2vw,26px)}
+.story-steps p{margin:0;color:var(--muted);font-size:15px;max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.2,.8,.2,1)}
+.story-steps li.on p{max-height:7em}
+.story-head{position:absolute;top:calc(84px + env(safe-area-inset-top,0px));inset-inline-start:max(20px,4vw);z-index:3}
+.story-head h2{margin:0;font-size:clamp(22px,2.6vw,32px)}
+.story-stage{position:relative;z-index:1}
+.story-stage canvas{display:block;width:100%;height:auto;aspect-ratio:16/10}
+.story-hud{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.story-hud div{background:rgba(18,14,12,.8);border:1px solid var(--line);border-radius:14px;padding:8px 16px;text-align:center;min-width:120px}
+.story-hud span{display:block;font-size:11.5px;color:var(--muted)}
+.story-hud b{font-size:22px;font-variant-numeric:tabular-nums}
+.story-bar{position:absolute;bottom:22px;left:max(20px,4vw);right:max(20px,4vw);height:2px;background:rgba(255,226,176,.08);border-radius:2px;direction:ltr}
+.story-bar i{position:absolute;inset:0 auto 0 0;width:0;background:var(--sunset);border-radius:2px}
+.story.night .story-pin::before{opacity:0}
+.no-pin .story-pin{height:auto;padding-block:90px 70px}
+.no-pin .story-head{position:static;grid-column:1/-1}
+@media (max-width:860px){
+  .story-pin{grid-template-columns:1fr;align-content:center;gap:12px}
+  .story-stage{order:-1}
+  .story-steps li{display:none;opacity:1;background:none;border:0;padding:4px 0;text-align:center}
+  .story-steps li.on{display:block}
+  .story-steps small{text-align:center}
+  .story-head{position:static;text-align:center;margin-top:70px}
+  .no-pin .story-pin{padding-block:30px}
+  .no-pin .story-steps li{display:block;opacity:.4}.no-pin .story-steps li.on{opacity:1}
+}
+@media (prefers-reduced-motion:reduce){.mq-track{animation:none!important}}
 </style>
 </head>
 <body>
@@ -303,10 +365,31 @@ footer .wrap{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap}
   <div class="ruler" id="ruler" aria-hidden="true"><div class="line"></div><div class="dot" id="rDot"></div><span class="unit">LENGTH · M</span></div>
   <div class="grain" aria-hidden="true"></div>
 </section>
+<div class="marquee" aria-hidden="true"><div class="mq-track" id="mq"></div></div>
+
+<!-- ============ story: the car gets built while you scroll ============ -->
+<section class="story" id="story" aria-label="من الوكالة للبر">
+  <div class="story-pin" id="storyPin">
+    <div class="story-head"><span class="eyebrow">من الوكالة للبر</span><h2>انزل، وشوفها تتجهز</h2></div>
+    <ol class="story-steps" id="storySteps">
+      <li data-s="0"><small>01 · STOCK</small><h3>مثل ما طلعت</h3><p>لكزس LX700h من الوكالة: بدون أي قطعة، والضوء يوصل 200 متر.</p></li>
+      <li data-s="1"><small>02 · ARMOUR</small><h3>درع تحت وقدام</h3><p>صدام حماية ويه ونش، درع تحت، صدام خلفي وعتبات. الوزن يصعد، ومركز الثقل ينزل شوية لأن القطع واطية.</p></li>
+      <li data-s="2"><small>03 · LIGHTS</small><h3>عيون الليل</h3><p>ليت بار 20 ألف لومن، كشافات بعيدة وضباب. مدى الضوء يصعد من 200 لـ 490 متر تقريباً.</p></li>
+      <li data-s="3"><small>04 · CAMP</small><h3>بيت فوق السقف</h3><p>رف، خيمة، مظلة، سنوركل، تاير احتياط وجالونات. هنا مركز الثقل يصعد وتحس بيها بالمنعطفات.</p></li>
+      <li data-s="4"><small>05 · NIGHT</small><h3>والليل؟</h3><p>كل ضوء تركبه يشتغل باللعبة بنفس قوته ومداه. هذا اللي تشوفه هو الحساب نفسه.</p></li>
+    </ol>
+    <div class="story-stage">
+      <canvas id="storyCv" width="1600" height="1000" role="img" aria-label="السيارة تتجهز بالمعدات خطوة بخطوة"></canvas>
+      <div class="story-hud"><div><span>وزن مضاف</span><b><bdi id="sKg">0</bdi></b> كغم</div><div><span>مدى الضوء</span><b><bdi id="sReach">200</bdi></b> م</div><div><span>القطع</span><b><bdi id="sN">0</bdi></b></div></div>
+    </div>
+    <div class="story-bar" aria-hidden="true"><i id="sBar"></i></div>
+  </div>
+</section>
+
 <div class="cursor" id="cursor" aria-hidden="true"><div class="cr"></div><div class="cd"></div><div class="cl">افتح</div></div>
 
 <!-- ============ detail sheet ============ -->
-<div class="detail" id="detail" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+<div class="detail" id="detail" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="dTitle">
   <div class="d-brand">OTH CAR STUDIO —— CAR SHEET</div>
   <button class="d-close" id="dClose">✕ BACK</button>
   <div class="detail-in">
@@ -429,6 +512,9 @@ footer .wrap{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap}
   <span>أسماء وشعارات السيارات ملك شركاتها. كل موديل ملك صاحبه حسب رخصته.</span>
 </div></footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js" defer></script>
 <script id="data-site" type="application/json">{"download": "", "version": "1.1.0"}</script>
 <script id="data-cars" type="application/json">[{"id": "2024_ford_f_150_raptor_r", "name": "2024 Ford F-150 Raptor R", "type": "pickup", "url": "files/2024_ford_f_150_raptor_r.othcar", "size": 13093693, "preview": "files/previews/2024_ford_f_150_raptor_r.png", "credit": {"title": "2024_ford_f-150_raptor_r", "author": "007 (https://sketchfab.com/tangwang920)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/2024-ford-f-150-raptor-r-11b2d3c304ee474195f06fa8315d247b"}, "acc": []}, {"id": "2024_gmc_hummer_ev_suv", "name": "2024 GMC Hummer EV SUV", "type": "suv", "url": "files/2024_gmc_hummer_ev_suv.othcar", "size": 20519129, "preview": "files/previews/2024_gmc_hummer_ev_suv.png", "credit": {"title": "2024 GMC Hummer EV SUV", "author": "Ddiaz Design (https://sketchfab.com/ddiaz-design)", "license": "CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)", "source": "https://sketchfab.com/3d-models/2024-gmc-hummer-ev-suv-7cd584fc9ba54acd9002d4286a08e419"}, "acc": []}, {"id": "2024_gmc_sierra_1500_at4x", "name": "2024 GMC Sierra 1500 AT4X", "type": "pickup", "url": "files/2024_gmc_sierra_1500_at4x.othcar", "size": 17454721, "preview": "files/previews/2024_gmc_sierra_1500_at4x.png", "credit": {"title": "2024 GMC Sierra 1500 AT4X", "author": "Ddiaz Design (https://sketchfab.com/ddiaz-design)", "license": "CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)", "source": "https://sketchfab.com/3d-models/2024-gmc-sierra-1500-at4x-41d0b29e3d2f4854a9b6349ccf918a1e"}, "acc": []}, {"id": "2025_lexus_lx700h", "name": "2025 Lexus LX700h", "type": "suv", "url": "files/2025_lexus_lx700h.othcar", "size": 10259152, "preview": "files/previews/2025_lexus_lx700h.png", "credit": {"title": "2025 Lexus LX700h", "author": "Ddiaz Design (https://sketchfab.com/ddiaz-design)", "license": "CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)", "source": "https://sketchfab.com/3d-models/2025-lexus-lx700h-1dd2df7c68e74ca3a3ea83fb6c4bd1a2"}, "acc": ["bullbar", "snorkel", "rack", "tent", "boards", "steps", "spare"]}, {"id": "toyota_land_cruiser_gr_sport", "name": "Toyota Land Cruiser 300 GR Sport", "type": "suv", "url": "files/toyota_land_cruiser_gr_sport.othcar", "size": 25815693, "preview": "files/previews/toyota_land_cruiser_gr_sport.png", "credit": {"title": "Toyota GR Land Cruiser", "author": "Nieve5677 (https://sketchfab.com/niev)", "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)", "source": "https://sketchfab.com/3d-models/toyota-gr-land-cruiser-5d311e17fee047989a1241f10e838a0a"}, "acc": []}]</script>
 <script id="data-parts" type="application/json">[]</script>
@@ -460,6 +546,7 @@ const catName = id => (CATS.find(c => c.id === id) || {}).name || "";
 const CAT_EN = { protection: "ARMOUR", recovery: "RECOVERY", lighting: "LIGHTING", roof: "ROOF & CAMP", touring: "TOURING" };
 const candela = (lm, beam) => lm * PH.optic_efficiency / (2 * Math.PI * (1 - Math.cos(Math.max(beam, 1) * Math.PI / 360)));
 const smooth = t => t * t * (3 - 2 * t);
+const goTo = sel => { const el = typeof sel === "string" ? $(sel) : sel; if (!el) return; if (window.__lenis) window.__lenis.scrollTo(el, { offset: -64, duration: 1.4 }); else el.scrollIntoView({ behavior: RM ? "auto" : "smooth" }); };
 const kg = m => (m % 1 ? m.toFixed(1) : m) + " كغم";
 
 /* =====================================================================================
@@ -637,7 +724,7 @@ const kg = m => (m % 1 ? m.toFixed(1) : m) + " كغم";
     $("#dSpecs").innerHTML = sp.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
     $("#dImg").setAttribute("href", p.img);
     [...blotG.children].forEach(c => c.setAttribute("r", RM ? 1150 : 0));
-    detail.classList.add("on"); detail.scrollTop = 0; document.documentElement.style.overflow = "hidden";
+    detail.classList.add("on"); detail.scrollTop = 0; document.documentElement.style.overflow = "hidden"; window.__lenis && window.__lenis.stop();
     cursor.classList.remove("on");
     anims.forEach(a => a.cancel()); anims = [];
     if (!RM) {
@@ -649,7 +736,7 @@ const kg = m => (m % 1 ? m.toFixed(1) : m) + " كغم";
   }
   function closeDetail() {
     if (!detailOpen) return;
-    const done = () => { detail.classList.remove("on"); anims.forEach(a => a.cancel()); anims = []; detailOpen = false; document.documentElement.style.overflow = ""; };
+    const done = () => { detail.classList.remove("on"); anims.forEach(a => a.cancel()); anims = []; detailOpen = false; document.documentElement.style.overflow = ""; window.__lenis && window.__lenis.start(); };
     if (RM) return done();
     detail.scrollTop = 0;
     const a = detail.animate([{ clipPath: "inset(0px 0px 0px 0px round 0px)" }, { clipPath: inset(coverRect()) }], { duration: 850, easing: "cubic-bezier(.76,0,.18,1)", fill: "both" });
@@ -659,7 +746,7 @@ const kg = m => (m % 1 ? m.toFixed(1) : m) + " كغم";
   $("#dGo").onclick = () => {
     const p = curPart;
     const b = BUILDS.find(x => x.car === p.k && x.preset === "stock" && !x.night) || BUILDS.find(x => x.car === p.k);
-    closeDetail(); setTimeout(() => { window.CFG && window.CFG.load({ ...b, night: 0 }); $("#build").scrollIntoView({ behavior: RM ? "auto" : "smooth" }); }, RM ? 0 : 500);
+    closeDetail(); setTimeout(() => { window.CFG && window.CFG.load({ ...b, night: 0 }); goTo("#build"); }, RM ? 0 : 500);
   };
 
   measure(); requestAnimationFrame(t => { lastT = t; frame(t); });
@@ -823,7 +910,7 @@ const kg = m => (m % 1 ? m.toFixed(1) : m) + " كغم";
         <div class="cfoot"><a class="btn small primary" href="${esc(c.url)}">نزّل ${mb(c.size)}</a>${k ? `<button class="btn small" data-try="${k}">جرّبها</button>` : ""}${c.credit?.source ? `<a class="btn small" href="${esc(c.credit.source)}" target="_blank" rel="noopener">الأصل</a>` : ""}</div></div></article>`; }).join("")
         : `<p class="lead">ماكو نتيجة. جرب كلمة ثانية.</p>`;
     };
-    wrap.addEventListener("click", e => { const t = e.target.closest("[data-try]"); if (t) { const b = BUILDS.find(x => x.car === t.dataset.try && x.preset === "overland") || BUILDS.find(x => x.car === t.dataset.try); window.CFG && window.CFG.load({ ...b, night: 0 }); $("#build").scrollIntoView({ behavior: RM ? "auto" : "smooth" }); return; }
+    wrap.addEventListener("click", e => { const t = e.target.closest("[data-try]"); if (t) { const b = BUILDS.find(x => x.car === t.dataset.try && x.preset === "overland") || BUILDS.find(x => x.car === t.dataset.try); window.CFG && window.CFG.load({ ...b, night: 0 }); goTo("#build"); return; }
       const ch = e.target.closest(".chip"); if (!ch) return; $$(".chip").forEach(x => x.classList.toggle("on", x === ch)); f = ch.dataset.f; render(); });
     $("#carSearch").oninput = e => { q = e.target.value.trim().toLowerCase(); render(); };
     render();
@@ -840,6 +927,135 @@ const kg = m => (m % 1 ? m.toFixed(1) : m) + " كغم";
   // sections lift gently as they come into view (always readable)
   const io = "IntersectionObserver" in window && !RM ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.remove("pre"); io.unobserve(e.target); } }), { threshold: .08 }) : null;
   if (io) $$(".reveal").forEach(el => { if (el.getBoundingClientRect().top > innerHeight) { el.classList.add("pre"); io.observe(el); } });
+})();
+
+/* =====================================================================================
+   4. SCROLL STORY: one car, parts arrive group by group as you scroll, then night falls
+   ===================================================================================== */
+const STORY = (function story() {
+  const cv = $("#storyCv"); if (!cv || !PARTS.length) { const s = $("#story"); s && (s.style.display = "none"); return null; }
+  const ctx = cv.getContext("2d"), W = 1600, Hh = 1000, CAR = "lexus", PAINT = "C2B280", root = $("#story");
+  const GROUPS = [[], ["skid", "rearbar", "steps", "bullbar"], ["fogs", "pods", "lightbar"], ["rack", "spare", "jerry", "snorkel", "tent", "awning"]];
+  const Z_DAY = ["skid", "rocklights", "mudflaps", "rearbar", "hilift", "jerry", "spare", "worklight", "steps", "flares", "rack", "roofbox", "tent", "awning", "boards", "tools", "lightbar", "snorkel", "pods", "bullbar", "fogs", "antenna"];
+  const Z_NIGHT = ["skid", "rocklights", "bullbar", "fogs", "antenna", "pods", "snorkel", "lightbar", "mudflaps", "steps", "flares", "rack", "roofbox", "tent", "awning", "boards", "tools", "worklight", "rearbar", "spare", "jerry", "hilift"];
+  const all = GROUPS.flat(), img = {};
+  const L = (k, src) => { if (img[k]) return img[k]; const i = new Image(); i.decoding = "async"; i.onload = () => { i.ok = true; draw(last); }; i.src = src; return (img[k] = i); };
+  const day = () => L("day", `cfg/${CAR}/day_${PAINT}.webp`), night = () => L("night", `cfg/${CAR}/night_${PAINT}.jpg`);
+  const part = (id, n) => L((n ? "n" : "d") + id, `cfg/${CAR}/${n ? "npart" : "part"}_${id}.webp`);
+  const light = id => L("l" + id, `cfg/${CAR}/light_${id}.jpg`);
+  let warmed = false;
+  function warm() { if (warmed) return; warmed = true; day(); night(); light("stock"); all.forEach(id => { part(id, 0); part(id, 1); const p = PARTS.find(x => x.id === id); p && p.light && light(id); }); }
+  // alpha of every part at story time t (0..4)
+  function alphas(t) {
+    const a = {};
+    GROUPS.forEach((g, gi) => { if (!gi) return; g.forEach((id, j) => { a[id] = Math.max(0, Math.min(1, (t - (gi - 1)) * (g.length + 1) - j)); }); });
+    return a;
+  }
+  let last = 0, shown = -1;
+  const stepEls = $$("#storySteps li"), kgEl = $("#sKg"), reachEl = $("#sReach"), nEl = $("#sN"), bar = $("#sBar");
+  function draw(t) {
+    last = t; const a = alphas(t), nf = smooth(Math.max(0, Math.min(1, t - 3)));
+    ctx.clearRect(0, 0, W, Hh);
+    const D = day();
+    if (D.ok && nf < 1) {
+      ctx.globalAlpha = 1; ctx.drawImage(D, 0, 0, W, Hh);
+      for (const id of Z_DAY) { const v = a[id]; if (!v) continue; const im = part(id, 0); if (!im.ok) continue; ctx.globalAlpha = v; ctx.drawImage(im, 0, -(1 - v) * 40, W, Hh); }
+    }
+    const N = night();
+    if (nf > 0 && N.ok) {
+      ctx.globalAlpha = nf; ctx.drawImage(N, 0, 0, W, Hh);
+      ctx.globalCompositeOperation = "screen";
+      for (const id of ["stock", ...all.filter(id => (PARTS.find(x => x.id === id) || {}).light)]) { const im = light(id); if (!im.ok) continue; ctx.globalAlpha = nf * (id === "stock" ? 1 : a[id]); ctx.drawImage(im, 0, 0, W, Hh); }
+      ctx.globalCompositeOperation = "source-over";
+      for (const id of Z_NIGHT) { const v = a[id]; if (!v) continue; const im = part(id, 1); if (!im.ok) continue; ctx.globalAlpha = nf * v; ctx.drawImage(im, 0, 0, W, Hh); }
+    }
+    ctx.globalAlpha = 1;
+    // live numbers
+    let kgSum = 0, n = 0, reach = Math.sqrt(PH.stock_high_beam_cd);
+    for (const id of all) { const v = a[id] || 0, p = PARTS.find(x => x.id === id); if (!p) continue; kgSum += p.mass_kg * v; if (v > .5) { n++; if (p.light && (p.light.dir || "front") === "front") reach = Math.max(reach, Math.sqrt(candela(p.light.lumens, p.light.beam_deg))); } }
+    kgEl.textContent = Math.round(kgSum); reachEl.textContent = Math.round(reach); nEl.textContent = n;
+    bar.style.width = (t / 4 * 100).toFixed(2) + "%";
+    const s = Math.max(0, Math.min(4, Math.round(t)));
+    if (s !== shown) { shown = s; stepEls.forEach((li, i) => li.classList.toggle("on", i === s)); root.classList.toggle("night", s === 4); }
+  }
+  // without the scroll engine the steps are buttons
+  stepEls.forEach((li, i) => li.addEventListener("click", () => { if (root._st) { const st = root._st; (window.__lenis ? window.__lenis.scrollTo(st.start + (st.end - st.start) * (i / 4 + .001), { duration: 1.2 }) : scrollTo(0, st.start + (st.end - st.start) * i / 4)); } else animateTo(i); }));
+  let raf = 0;
+  function animateTo(i) { cancelAnimationFrame(raf); const from = last, t0 = performance.now(); (function f(now) { const k = Math.min(1, (now - t0) / (RM ? 1 : 900)), e = 1 - Math.pow(1 - k, 3); draw(from + (i - from) * e); if (k < 1) raf = requestAnimationFrame(f); })(t0); }
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { warm(); io.disconnect(); } }), { rootMargin: "800px" }); io.observe(root);
+  draw(0);
+  return { draw, warm, root, animateTo };
+})();
+
+/* =====================================================================================
+   5. MOTION: smooth scroll (Lenis), scroll-driven scenes (GSAP ScrollTrigger), small touches
+   ===================================================================================== */
+(function motion() {
+  // brand marquee content
+  const brands = ["LEXUS", "GMC", "FORD", "TOYOTA", "LAND ROVER", "OFF ROAD", "OVER THE HILL"];
+  const once = brands.map(b => `<span>${b}</span><i>✦</i>`).join("");
+  $("#mq").innerHTML = once + once;
+  // pointer spotlight on cards
+  const fine = matchMedia("(pointer:fine)").matches;
+  $$(".card2,.step,.band,.soon,.cr").forEach(el => el.classList.add("spot"));
+  if (fine) document.addEventListener("pointermove", e => { const c = e.target.closest && e.target.closest(".spot,.card"); if (!c) return; const r = c.getBoundingClientRect(); c.style.setProperty("--mx", e.clientX - r.left + "px"); c.style.setProperty("--my", e.clientY - r.top + "px"); }, { passive: true });
+  if (!$$(".card").length) {} else $$(".card").forEach(el => el.classList.add("spot"));
+  new MutationObserver(() => $$(".card:not(.spot)").forEach(el => el.classList.add("spot"))).observe(document.body, { childList: true, subtree: true });
+  // in-page links glide
+  document.addEventListener("click", e => { const a = e.target.closest('a[href^="#"]'); if (!a) return; const id = a.getAttribute("href"); if (id.length < 2) return; const el = $(id); if (!el) return; e.preventDefault(); goTo(el); history.replaceState(null, "", id); });
+
+  function start() {
+    const G = window.gsap, ST = window.ScrollTrigger;
+    if (!G || !ST || RM) {                              // plain page: story steps are buttons, marquee is CSS
+      document.documentElement.classList.add("no-gsap"); STORY && STORY.root.classList.add("no-pin"); STORY && STORY.warm(); return;
+    }
+    G.registerPlugin(ST);
+    // smooth scroll
+    if (window.Lenis) {
+      const lenis = new Lenis({ lerp: .11, wheelMultiplier: 1, smoothWheel: true, prevent: n => !!(n.closest && (n.closest("#detail"))) });
+      window.__lenis = lenis; lenis.on("scroll", ST.update);
+      G.ticker.add(t => lenis.raf(t * 1000)); G.ticker.lagSmoothing(0);
+    }
+    // marquee: steady drift that speeds up with scroll velocity
+    const mq = G.to("#mq", { xPercent: -50, ease: "none", duration: 38, repeat: -1 });
+    let boost = G.quickTo(mq, "timeScale", { duration: .6, ease: "power3.out" });
+    ST.create({ onUpdate: s => { boost(1 + Math.min(6, Math.abs(s.getVelocity()) / 350)); clearTimeout(mq._t); mq._t = setTimeout(() => boost(1), 120); } });
+    // hero: words drift, shelf sinks back as you leave it
+    G.timeline({ scrollTrigger: { trigger: "#top", start: "top top", end: "bottom top", scrub: .6 } })
+      .to(".halftone.a", { xPercent: 18, ease: "none" }, 0).to(".halftone.b", { xPercent: -18, ease: "none" }, 0)
+      .to("#shelf", { yPercent: 10, scale: .9, opacity: .25, ease: "none" }, 0)
+      .to(".caption,.arrow,.ruler,.kicker", { opacity: 0, y: -30, ease: "none" }, 0);
+    // first paint: the shelf rises out of the dark
+    G.from("#shelf", { opacity: 0, y: 60, duration: 1.4, ease: "expo.out", delay: .1 });
+    G.from(".kicker > *", { opacity: 0, y: 24, duration: 1, ease: "expo.out", stagger: .08, delay: .25 });
+    G.from(".caption > *", { opacity: 0, y: 18, duration: .9, ease: "expo.out", stagger: .06, delay: .5 });
+    // headings rise word by word (whole words: Arabic letters must stay joined)
+    $$("section:not(#top):not(#story) h2").forEach(h2 => {
+      h2.innerHTML = h2.textContent.trim().split(/\s+/).map(w => `<span class="wd"><span>${esc(w)}</span></span>`).join(" ");
+      G.from(h2.querySelectorAll(".wd>span"), { yPercent: 110, duration: 1, ease: "expo.out", stagger: .05, scrollTrigger: { trigger: h2, start: "top 88%", once: true } });
+    });
+    // the story: pinned, scrubbed
+    if (STORY) {
+      const st = ST.create({ trigger: "#storyPin", start: "top top", end: "+=" + Math.round(innerHeight * 3.2), pin: true, scrub: true, anticipatePin: 1,
+        onEnter: () => STORY.warm(), onUpdate: s => STORY.draw(s.progress * 4) });
+      STORY.root._st = st;
+      G.from("#storyCv", { scale: .9, opacity: 0, scrollTrigger: { trigger: "#story", start: "top 85%", end: "top 20%", scrub: .5 } });
+    }
+    // steps and cards arrive in a stagger
+    ST.batch(".step,.card,.cr", { start: "top 92%", once: true, onEnter: els => G.from(els, { y: 34, opacity: 0, duration: .8, ease: "expo.out", stagger: .07, overwrite: true }) });
+    // primary buttons lean towards the pointer
+    if (fine) $$(".band .btn.primary,.nav .btn.primary,.d-go").forEach(b => {
+      const x = G.quickTo(b, "x", { duration: .5, ease: "elastic.out(1,.5)" }), y = G.quickTo(b, "y", { duration: .5, ease: "elastic.out(1,.5)" });
+      b.addEventListener("pointermove", e => { const r = b.getBoundingClientRect(); x((e.clientX - r.left - r.width / 2) * .25); y((e.clientY - r.top - r.height / 2) * .35); });
+      b.addEventListener("pointerleave", () => { x(0); y(0); });
+    });
+    // the viewer floats in with depth
+    G.from("#viewer", { y: 60, rotateX: 8, transformPerspective: 1200, transformOrigin: "50% 100%", opacity: 0, duration: 1.2, ease: "expo.out", scrollTrigger: { trigger: "#viewer", start: "top 85%", once: true } });
+    addEventListener("load", () => ST.refresh());
+  }
+  // libraries are deferred: wait for them, but never longer than 4 s
+  let tries = 0;
+  (function wait() { if ((window.gsap && window.ScrollTrigger) || tries++ > 40 || RM) start(); else setTimeout(wait, 100); })();
 })();
 </script>
 </body>

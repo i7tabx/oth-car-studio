@@ -316,7 +316,7 @@ html.lenis,html.lenis body{height:auto}
 .story-head{position:absolute;top:calc(84px + env(safe-area-inset-top,0px));inset-inline-start:max(20px,4vw);z-index:3}
 .story-head h2{margin:0;font-size:clamp(22px,2.6vw,32px)}
 .story-stage{position:relative;z-index:1}
-.story-stage canvas{display:block;width:100%;height:auto;aspect-ratio:16/10}
+.story-stage canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;-webkit-mask-image:radial-gradient(70% 72% at 50% 52%,#000 62%,transparent 100%);mask-image:radial-gradient(70% 72% at 50% 52%,#000 62%,transparent 100%)}
 .story-hud{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
 .story-hud div{background:rgba(18,14,12,.8);border:1px solid var(--line);border-radius:14px;padding:8px 16px;text-align:center;min-width:120px}
 .story-hud span{display:block;font-size:11.5px;color:var(--muted)}
@@ -938,7 +938,7 @@ const STORY = (function story() {
   const GROUPS = [[], ["skid", "rearbar", "steps", "bullbar"], ["fogs", "pods", "lightbar"], ["rack", "spare", "jerry", "snorkel", "tent", "awning"]];
   const Z_DAY = ["skid", "rocklights", "mudflaps", "rearbar", "hilift", "jerry", "spare", "worklight", "steps", "flares", "rack", "roofbox", "tent", "awning", "boards", "tools", "lightbar", "snorkel", "pods", "bullbar", "fogs", "antenna"];
   const Z_NIGHT = ["skid", "rocklights", "bullbar", "fogs", "antenna", "pods", "snorkel", "lightbar", "mudflaps", "steps", "flares", "rack", "roofbox", "tent", "awning", "boards", "tools", "worklight", "rearbar", "spare", "jerry", "hilift"];
-  const all = GROUPS.flat(), img = {};
+  const all = GROUPS.flat(), img = {}, DC = [170, 70, 1312, 820];   // day frames are cropped closer to the car
   const L = (k, src) => { if (img[k]) return img[k]; const i = new Image(); i.decoding = "async"; i.onload = () => { i.ok = true; draw(last); }; i.src = src; return (img[k] = i); };
   const day = () => L("day", `cfg/${CAR}/day_${PAINT}.webp`), night = () => L("night", `cfg/${CAR}/night_${PAINT}.jpg`);
   const part = (id, n) => L((n ? "n" : "d") + id, `cfg/${CAR}/${n ? "npart" : "part"}_${id}.webp`);
@@ -958,8 +958,8 @@ const STORY = (function story() {
     ctx.clearRect(0, 0, W, Hh);
     const D = day();
     if (D.ok && nf < 1) {
-      ctx.globalAlpha = 1; ctx.drawImage(D, 0, 0, W, Hh);
-      for (const id of Z_DAY) { const v = a[id]; if (!v) continue; const im = part(id, 0); if (!im.ok) continue; ctx.globalAlpha = v; ctx.drawImage(im, 0, -(1 - v) * 40, W, Hh); }
+      ctx.globalAlpha = 1; ctx.drawImage(D, ...DC, 0, 0, W, Hh);
+      for (const id of Z_DAY) { const v = a[id]; if (!v) continue; const im = part(id, 0); if (!im.ok) continue; ctx.globalAlpha = v; ctx.drawImage(im, DC[0], DC[1] + (1 - v) * 40, DC[2], DC[3], 0, 0, W, Hh); }
     }
     const N = night();
     if (nf > 0 && N.ok) {

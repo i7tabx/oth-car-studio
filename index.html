@@ -1053,9 +1053,8 @@ const STORY = (function story() {
     G.from("#viewer", { y: 60, rotateX: 8, transformPerspective: 1200, transformOrigin: "50% 100%", opacity: 0, duration: 1.2, ease: "expo.out", scrollTrigger: { trigger: "#viewer", start: "top 85%", once: true } });
     addEventListener("load", () => ST.refresh());
   }
-  // libraries are deferred: wait for them, but never longer than 4 s
-  let tries = 0;
-  (function wait() { if ((window.gsap && window.ScrollTrigger) || tries++ > 40 || RM) start(); else setTimeout(wait, 100); })();
+  // deferred libraries have all run (or failed) by DOMContentLoaded
+  if (document.readyState === "loading") addEventListener("DOMContentLoaded", start, { once: true }); else start();
 })();
 </script>
 </body>
